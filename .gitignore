@@ -1,0 +1,23 @@
+# Dependencies
+node_modules/
+*/node_modules/
+client/node_modules/
+server/node_modules/
+
+# Build and Environment
+dist/
+dist-ssr/
+build/
+.env
+.env.*
+.DS_Store
+
+# SQLite temp files
+*.db-shm
+*.db-wal
+server/nongra.db-shm
+server/nongra.db-wal
+
+# Uploads except keep file
+server/uploads/*
+!server/uploads/.gitkeep
