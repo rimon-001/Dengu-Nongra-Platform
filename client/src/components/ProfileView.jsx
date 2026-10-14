@@ -1,5 +1,8 @@
-import React from 'react';
-import { Award, Shield, CheckCircle2, User, Trophy, Download, Printer, LogOut, LogIn, ExternalLink } from 'lucide-react';
+import React, { useRef } from 'react';
+import { 
+  Award, Shield, CheckCircle2, User, Trophy, Download, 
+  Printer, LogOut, LogIn, ExternalLink, QrCode, Sparkles, Flame, Target, Star, ShieldCheck
+} from 'lucide-react';
 
 export default function ProfileView({ 
   user, 
@@ -20,13 +23,270 @@ export default function ProfileView({
 
   const userPoints = user?.points || (isGuest ? 0 : 50);
 
+  // Dynamic Badge Tier Calculation
+  const getBadgeTier = (pts) => {
+    if (pts >= 500) {
+      return {
+        nameEn: 'Platinum Sentinel',
+        nameBn: 'প্লাটিনাম সেন্টিনেল',
+        icon: '💎',
+        color: '#7c3aed',
+        bg: '#faf5ff',
+        border: '#c084fc',
+        nextTarget: 1000
+      };
+    }
+    if (pts >= 250) {
+      return {
+        nameEn: 'Gold Sentinel',
+        nameBn: 'গোল্ড সেন্টিনেল (Gold Badge)',
+        icon: '🥇',
+        color: '#d97706',
+        bg: '#fffbeb',
+        border: '#fde68a',
+        nextTarget: 500
+      };
+    }
+    if (pts >= 100) {
+      return {
+        nameEn: 'Silver Guardian',
+        nameBn: 'সিলভার গার্ডিয়ান (Silver Badge)',
+        icon: '🥈',
+        color: '#475569',
+        bg: '#f8fafc',
+        border: '#cbd5e1',
+        nextTarget: 250
+      };
+    }
+    return {
+      nameEn: 'Bronze Contributor',
+      nameBn: 'ব্রোঞ্জ কন্ট্রিবিউটর (Bronze Badge)',
+      icon: '🥉',
+      color: '#b45309',
+      bg: '#fff7ed',
+      border: '#fed7aa',
+      nextTarget: 100
+    };
+  };
+
+  const badgeTier = getBadgeTier(userPoints);
+  const nextTarget = badgeTier.nextTarget;
+  const progressPercent = Math.min(100, Math.round((userPoints / nextTarget) * 100));
+
+  // Targeted Single-Page Certificate Print Generator
   const handlePrintCertificate = () => {
-    window.print();
+    const printWindow = window.open('', '_blank', 'width=900,height=650');
+    if (!printWindow) {
+      window.print();
+      return;
+    }
+
+    const recipientName = user?.name || (isBengali ? 'নাগরিক পরিদর্শক' : 'Civic Contributor');
+    const squadTitle = user?.squad_name ? `Squad: ${user.squad_name}` : (isVolunteer ? 'Field Squad Taskforce' : 'Resident Surveillance Cell');
+    const trackingCode = `NONGRA-${user?.id || 'CITIZEN'}-2026-CERT`;
+    const issueDate = new Date().toLocaleDateString(isBengali ? 'bn-BD' : 'en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+
+    const certificateHTML = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Nongra Official Citation Certificate - ${recipientName}</title>
+        <style>
+          @page {
+            size: A4 landscape;
+            margin: 10mm;
+          }
+          * {
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+          }
+          body {
+            margin: 0;
+            padding: 0;
+            background: #ffffff;
+            color: #0f172a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+          }
+          .certificate-frame {
+            width: 100%;
+            max-width: 960px;
+            border: 6px double #059669;
+            padding: 32px 40px;
+            background: #ffffff;
+            position: relative;
+            box-shadow: none;
+            border-radius: 8px;
+            text-align: center;
+          }
+          .header-crest {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 8px;
+          }
+          .emblem {
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            background: #047857;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            font-weight: bold;
+            border: 2px solid #059669;
+          }
+          .govt-title {
+            font-size: 13px;
+            font-weight: 800;
+            color: #065f46;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 2px;
+          }
+          .cert-main-title {
+            font-size: 26px;
+            font-weight: 900;
+            color: #064e3b;
+            margin: 8px 0;
+            letter-spacing: -0.5px;
+          }
+          .cert-subtitle {
+            font-size: 12px;
+            color: #64748b;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 24px;
+          }
+          .citation-body {
+            font-size: 14px;
+            line-height: 1.6;
+            color: #334155;
+            max-width: 740px;
+            margin: 0 auto 20px;
+          }
+          .recipient-highlight {
+            font-size: 24px;
+            font-weight: 900;
+            color: #047857;
+            display: block;
+            margin: 8px 0 12px 0;
+            border-bottom: 2px solid #a7f3d0;
+            padding-bottom: 4px;
+          }
+          .badge-row {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #f0fdf4;
+            border: 1.5px solid #86efac;
+            padding: 6px 18px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 800;
+            color: #166534;
+            margin-bottom: 28px;
+          }
+          .footer-grid {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-top: 30px;
+            padding-top: 16px;
+            border-top: 1px dashed #cbd5e1;
+            font-size: 11px;
+            color: #64748b;
+          }
+          .signature-box {
+            text-align: center;
+            width: 200px;
+          }
+          .sign-line {
+            border-top: 1.5px solid #334155;
+            margin-bottom: 4px;
+          }
+          .hash-stamp {
+            text-align: left;
+            font-family: monospace;
+            font-size: 10px;
+            color: #047857;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="certificate-frame">
+          <div class="header-crest">
+            <div class="emblem">🛡️</div>
+            <div>
+              <div class="govt-title">Directorate General of Health Services (DGHS) & Municipal Grid</div>
+              <div style="font-size: 11px; font-weight: 700; color: #047857;">National Dengue & Vector Surveillance Mission • Ashulia Sector</div>
+            </div>
+          </div>
+
+          <div class="cert-main-title">CIVIC EPIDEMIOLOGICAL CITATION</div>
+          <div class="cert-subtitle">Official Sanitary Honor & Vector Containment Award</div>
+
+          <div class="citation-body">
+            This official civic commendation is proudly presented to
+            <span class="recipient-highlight">${recipientName}</span>
+            in formal recognition of active participation, Breteau Index container remediation, and steadfast service toward eradicating <em>Aedes aegypti</em> breeding reservoirs within the Daffodil Smart Campus and Ashulia territory.
+          </div>
+
+          <div class="badge-row">
+            ${badgeTier.icon} Rank Status: ${badgeTier.nameEn} (${userPoints} Verified Civic Points)
+          </div>
+
+          <div class="footer-grid">
+            <div class="hash-stamp">
+              <div><strong>System Hash:</strong> ${trackingCode}</div>
+              <div><strong>Issue Date:</strong> ${issueDate}</div>
+              <div><strong>Registry:</strong> Verified Municipal Ledger (SHA-256)</div>
+            </div>
+
+            <div class="signature-box">
+              <div class="sign-line"></div>
+              <strong>Dr. M. Rahman</strong><br/>
+              Chief Vector Control Epidemiologist<br/>
+              DGHS Taskforce
+            </div>
+
+            <div class="signature-box">
+              <div class="sign-line"></div>
+              <strong>Director of Field Services</strong><br/>
+              DIU Smart Campus Environment Cell<br/>
+              Ashulia, Dhaka
+            </div>
+          </div>
+        </div>
+
+        <script>
+          window.onload = function() {
+            window.print();
+            setTimeout(function() { window.close(); }, 600);
+          };
+        </script>
+      </body>
+      </html>
+    `;
+
+    printWindow.document.open();
+    printWindow.document.write(certificateHTML);
+    printWindow.document.close();
   };
 
   return (
     <div className="profile-view-container" style={{ paddingBottom: '80px' }}>
-      {/* 1. Header Card */}
+      {/* 1. Header Card with Dynamic Badge Pill */}
       <div style={{
         background: isVolunteer 
           ? 'linear-gradient(135deg, #064e3b 0%, #047857 100%)' 
@@ -50,13 +310,14 @@ export default function ProfileView({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: '#ffffff'
+              color: '#ffffff',
+              fontSize: '1.8rem'
             }}>
-              {isVolunteer ? <Shield size={32} /> : <User size={32} />}
+              {badgeTier.icon}
             </div>
 
             <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px', flexWrap: 'wrap' }}>
                 <span style={{
                   fontSize: '0.7rem',
                   fontWeight: 800,
@@ -69,25 +330,38 @@ export default function ProfileView({
                 }}>
                   {isVolunteer ? 'Field Volunteer Squad' : isGuest ? 'Guest Mode' : 'Resident Citizen'}
                 </span>
-                {isVolunteer && <span style={{ fontSize: '0.72rem', color: '#a7f3d0' }}>● Active Responder</span>}
+
+                {/* Badge Rank Pill */}
+                <span style={{
+                  fontSize: '0.72rem',
+                  fontWeight: 800,
+                  padding: '3px 8px',
+                  borderRadius: '4px',
+                  background: '#fef3c7',
+                  color: '#92400e',
+                  border: '1px solid #fde68a'
+                }}>
+                  {badgeTier.icon} {isBengali ? badgeTier.nameBn : badgeTier.nameEn}
+                </span>
               </div>
 
               <h2 style={{ margin: 0, fontSize: '1.4rem', fontWeight: 900 }}>
                 {user?.name || (isBengali ? 'গেস্ট নাগরিক' : 'Guest Citizen')}
               </h2>
               <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.7)', marginTop: '2px' }}>
-                {user?.squad_name ? `${user.squad_name} • ` : ''}{user?.email || (isBengali ? 'লগইন ছাড়াই পরিচালিত' : 'Unauthenticated session')}
+                {user?.squad_name ? `${user.squad_name} • ` : ''}
+                {user?.email || (isBengali ? 'লগইন ছাড়াই পরিচালিত (গেস্ট মোড)' : 'Unauthenticated session (Guest Mode)')}
               </div>
             </div>
           </div>
 
-          {/* Points & Action */}
+          {/* Points & Auth Switcher */}
           <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: '2rem', fontWeight: 900, color: '#38bdf8', lineHeight: 1 }}>
+            <div style={{ fontSize: '2.2rem', fontWeight: 900, color: '#38bdf8', lineHeight: 1 }}>
               {userPoints}
             </div>
             <div style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.7)', marginTop: '2px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-              {isBengali ? 'অর্জিত পয়েন্ট' : 'Civic Impact Points'}
+              {isBengali ? 'মোট অর্জিত পয়েন্ট' : 'Accumulated Civic Points'}
             </div>
 
             <div style={{ marginTop: '12px' }}>
@@ -135,10 +409,23 @@ export default function ProfileView({
             </div>
           </div>
         </div>
+
+        {/* Level Progression Progress Bar */}
+        <div style={{ marginTop: '18px', paddingTop: '14px', borderTop: '1px solid rgba(255,255,255,0.15)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.74rem', marginBottom: '4px' }}>
+            <span>
+              {isBengali ? `পরবর্তী টার্গেট: ${nextTarget} পয়েন্ট` : `Next Badge Tier: ${nextTarget} pts target`}
+            </span>
+            <strong>{progressPercent}%</strong>
+          </div>
+          <div style={{ width: '100%', height: '6px', background: 'rgba(255,255,255,0.2)', borderRadius: '4px', overflow: 'hidden' }}>
+            <div style={{ width: `${progressPercent}%`, height: '100%', background: '#38bdf8', borderRadius: '4px' }} />
+          </div>
+        </div>
       </div>
 
       {/* 2. Three Metric Stats Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '22px' }}>
+      <div className="metrics-summary-row" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '22px' }}>
         <div style={{ background: '#ffffff', border: '1px solid var(--border)', borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
           <div style={{ fontSize: '1.5rem', fontWeight: 900, color: '#dc2626' }}>
             {myReports.length}
@@ -158,25 +445,28 @@ export default function ProfileView({
         </div>
 
         <div style={{ background: '#ffffff', border: '1px solid var(--border)', borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-          <div style={{ fontSize: '1.5rem', fontWeight: 900, color: '#0284c7' }}>
-            {isVolunteer ? 'Tier 1' : userPoints > 100 ? 'Guardian' : 'Contributor'}
+          <div style={{ fontSize: '1.4rem', fontWeight: 900, color: badgeTier.color }}>
+            {badgeTier.icon} {userPoints >= 250 ? 'Gold' : userPoints >= 100 ? 'Silver' : 'Bronze'}
           </div>
           <div style={{ fontSize: '0.74rem', color: '#64748b', fontWeight: 700, marginTop: '2px' }}>
-            {isBengali ? 'কমিউনিটি র‍্যাংক' : 'Civic Rank'}
+            {isBengali ? 'প্রোফাইল ব্যাজ' : 'Profile Badge'}
           </div>
         </div>
       </div>
 
       {/* 3. Official Municipal & DGHS Certificate */}
-      <div style={{
-        background: '#ffffff',
-        border: '2px solid #059669',
-        borderRadius: '16px',
-        padding: '24px',
-        position: 'relative',
-        marginBottom: '24px',
-        boxShadow: '0 4px 16px rgba(5,150,105,0.06)'
-      }}>
+      <div 
+        id="nongra-certificate-card"
+        style={{
+          background: '#ffffff',
+          border: '2px solid #059669',
+          borderRadius: '16px',
+          padding: '24px',
+          position: 'relative',
+          marginBottom: '24px',
+          boxShadow: '0 4px 16px rgba(5,150,105,0.06)'
+        }}
+      >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '10px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Award size={20} color="#059669" />
@@ -191,43 +481,51 @@ export default function ProfileView({
             style={{
               display: 'inline-flex',
               alignItems: 'center',
-              gap: '5px',
-              padding: '6px 12px',
+              gap: '6px',
+              padding: '7px 14px',
               borderRadius: '8px',
               background: '#ecfdf5',
-              border: '1px solid #a7f3d0',
+              border: '1.5px solid #059669',
               color: '#065f46',
-              fontSize: '0.74rem',
-              fontWeight: 700,
-              cursor: 'pointer'
+              fontSize: '0.78rem',
+              fontWeight: 800,
+              cursor: 'pointer',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+              transition: 'all 0.15s ease'
             }}
           >
-            <Printer size={13} /> {isBengali ? 'প্রিন্ট / সেভ' : 'Print Certificate'}
+            <Printer size={14} /> {isBengali ? 'সনদ প্রিন্ট করুন' : 'Print Certificate'}
           </button>
         </div>
 
         <div style={{
           border: '1px dashed #a7f3d0',
           borderRadius: '10px',
-          padding: '18px',
+          padding: '20px',
           background: '#f0fdf4',
-          textAlign: 'center'
+          textAlign: 'center',
+          position: 'relative'
         }}>
           <div style={{ fontSize: '0.7rem', color: '#065f46', fontWeight: 800, letterSpacing: '1.5px', textTransform: 'uppercase' }}>
             GOVERNMENT SANITARY & VECTOR TASKFORCE
           </div>
-          <h3 style={{ margin: '6px 0 4px', fontSize: '1.2rem', fontWeight: 900, color: '#064e3b' }}>
+          <h3 style={{ margin: '6px 0 4px', fontSize: '1.25rem', fontWeight: 900, color: '#064e3b' }}>
             CERTIFICATE OF CIVIC EPIDEMIOLOGICAL CITATION
           </h3>
-          <p style={{ margin: '0 auto 12px', maxWidth: '500px', fontSize: '0.8rem', color: '#334155', lineHeight: 1.5 }}>
+          <p style={{ margin: '0 auto 12px', maxWidth: '520px', fontSize: '0.82rem', color: '#334155', lineHeight: 1.55 }}>
             {isBengali
-              ? `এই সনদটি নিশ্চিত করে যে ${user?.name || 'নাগরিক'}, আশুলিয়া ও ডিআইইউ ক্যাম্পাস এলাকায় এডিস মশার প্রজননস্থল প্রতিরোধ ও পরিচ্ছন্নতা অভিযানে সক্রিয়ভাবে অংশ নিয়েছেন।`
+              ? `এই সনদটি নিশ্চিত করে যে ${user?.name || 'নাগরিক'}, আশুলিয়া ও ডিআইইউ ক্যাম্পাস এলাকায় এডিস মশার প্রজননস্থল প্রতিরোধ ও পরিচ্ছন্নতা অভিযানে সক্রিয়ভাবে অংশ নিয়েছেন।`
               : `Presented to ${user?.name || 'Registered Resident'} in official recognition of proactive vector hazard remediation, Breteau Index containment, and community health protection in Ashulia.`}
           </p>
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', fontSize: '0.74rem', color: '#047857', fontWeight: 700 }}>
-            <span>Registry ID: NONGRA-{user?.id || 'GUEST'}-2026</span>
+
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '16px', fontSize: '0.76rem', color: '#047857', fontWeight: 700, flexWrap: 'wrap' }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+              <QrCode size={14} /> Hash: NONGRA-{user?.id || 'GUEST'}-2026
+            </span>
             <span>•</span>
             <span>Status: Verified Civic Contributor</span>
+            <span>•</span>
+            <span style={{ color: badgeTier.color }}>Badge: {badgeTier.nameEn}</span>
           </div>
         </div>
       </div>
@@ -238,7 +536,7 @@ export default function ProfileView({
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Trophy size={18} color="#d97706" />
             <strong style={{ fontSize: '0.9rem', color: '#1e293b' }}>
-              {isBengali ? 'সেরা ভলান্টিয়ার ও স্কোয়াড লিডারবোর্ড' : 'Top Volunteer Squads & Responders'}
+              {isBengali ? 'সেরা ভলান্টিয়ার ও স্কোয়াড লিডারবোর্ড' : 'Top Volunteer Squads & Responders'}
             </strong>
           </div>
           <span style={{ fontSize: '0.74rem', color: '#64748b' }}>
@@ -301,6 +599,36 @@ export default function ProfileView({
           )}
         </div>
       </div>
+
+      {/* Embedded Print CSS to guarantee clean single-sheet certificate output */}
+      <style>{`
+        @media print {
+          body * {
+            visibility: hidden !important;
+          }
+          #nongra-certificate-card, #nongra-certificate-card * {
+            visibility: visible !important;
+          }
+          #nongra-certificate-card {
+            position: fixed !important;
+            left: 0 !important;
+            top: 0 !important;
+            width: 100vw !important;
+            height: auto !important;
+            margin: 0 !important;
+            padding: 24px !important;
+            border: 4px double #059669 !important;
+            box-shadow: none !important;
+            background: #ffffff !important;
+          }
+          #nongra-certificate-card button {
+            display: none !important;
+          }
+          .bottom-nav, .portal-banner-container, .portal-marquee-bar, .hero-header {
+            display: none !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }

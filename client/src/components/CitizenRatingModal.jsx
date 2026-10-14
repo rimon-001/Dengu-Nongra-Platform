@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Star, ThumbsUp, AlertTriangle, ShieldCheck, MessageSquare, CheckCircle2 } from 'lucide-react';
+import { X, Star, ThumbsUp, AlertTriangle, ShieldCheck, MessageSquare, CheckCircle2, Award } from 'lucide-react';
 
 export default function CitizenRatingModal({ isOpen, onClose, reports = [], isBengali = false }) {
   if (!isOpen) return null;
@@ -42,8 +42,9 @@ export default function CitizenRatingModal({ isOpen, onClose, reports = [], isBe
       site: activeSite ? activeSite.description : 'Cleared Site',
       rating: Number(rating),
       comment: feedback || (isBengali ? 'সন্তোষজনক পরিচ্ছন্নতা কার্যক্রম।' : 'Work verified and approved by community.'),
-      reviewer: isBengali ? 'যাচাইকৃত স্থানীয় নাগরিক' : 'Verified Local Resident',
-      date: isBengali ? 'এইমাত্র' : 'Just now'
+      reviewer: isBengali ? 'যাচাইকৃত স্থানীয় নাগরিক' : 'Verified Local Resident',
+      date: isBengali ? 'এইমাত্র' : 'Just now',
+      reInfested
     };
 
     setReviews([newRev, ...reviews]);
@@ -100,10 +101,10 @@ export default function CitizenRatingModal({ isOpen, onClose, reports = [], isBe
               <div style={{ textAlign: 'center', padding: '14px 0' }}>
                 <CheckCircle2 size={36} color="#16a34a" style={{ marginBottom: '6px' }} />
                 <h4 style={{ margin: 0, color: '#166534', fontSize: '0.95rem', fontWeight: 800 }}>
-                  {isBengali ? 'আপনার মতামত সফলভাবে জমা হয়েছে!' : 'Citizen Review Recorded Successfully!'}
+                  {isBengali ? 'আপনার মতামত সফলভাবে জমা হয়েছে!' : 'Citizen Review Recorded Successfully!'}
                 </h4>
                 <p style={{ margin: '4px 0 0', fontSize: '0.76rem', color: '#4b5563' }}>
-                  {isBengali ? 'স্বেচ্ছাসেবক দলের স্কোরে রেটিং যোগ করা হয়েছে।' : 'Public rating points have been credited to the field squad.'}
+                  {isBengali ? 'স্বেচ্ছাসেবক দলের স্কোরে রেটিং ও বোনাস যোগ করা হয়েছে।' : 'Public rating bonus credited to assigned cleanup squad.'}
                 </p>
               </div>
             ) : (
@@ -150,7 +151,7 @@ export default function CitizenRatingModal({ isOpen, onClose, reports = [], isBe
                     type="text"
                     value={feedback}
                     onChange={e => setFeedback(e.target.value)}
-                    placeholder={isBengali ? "নাগরিক মতামত লিখুন (যেমন: ড্রেনটি সঠিকভাবে পরিষ্কার হয়েছে)" : "Write citizen note (e.g. Water successfully pumped out)"}
+                    placeholder={isBengali ? "নাগরিক মতামত লিখুন (যেমন: ড্রেনটি সঠিকভাবে পরিষ্কার হয়েছে)" : "Write citizen note (e.g. Water successfully pumped out)"}
                     style={{ width: '100%', padding: '8px 10px', borderRadius: '8px', border: '1px solid var(--border)', fontSize: '0.82rem' }}
                   />
                 </div>
@@ -171,14 +172,14 @@ export default function CitizenRatingModal({ isOpen, onClose, reports = [], isBe
                 >
                   <AlertTriangle size={15} color={reInfested ? '#dc2626' : '#64748b'} />
                   <span style={{ fontSize: '0.76rem', fontWeight: 700, color: reInfested ? '#dc2626' : '#475569' }}>
-                    {isBengali ? '⚠️ সতর্কবার্তা: এখানে পুনরায় পানি জমে লার্ভা দেখা গেছে?' : '⚠️️ Re-Infestation Alert: Did standing water accumulate again?'}
+                    {isBengali ? '⚠️ সতর্কবার্তা: এখানে পুনরায় পানি জমে লার্ভা দেখা গেছে?' : '⚠️ Re-Infestation Alert: Did standing water accumulate again?'}
                   </span>
                 </div>
 
                 <button
                   type="submit"
                   className="btn-primary"
-                  style={{ width: '100%', fontSize: '0.82rem', padding: '8px' }}
+                  style={{ width: '100%', fontSize: '0.82rem', padding: '9px' }}
                 >
                   {isBengali ? 'রেটিং ও ফিডব্যাক সাবমিট করুন' : 'Submit Citizen Audit Verification'}
                 </button>

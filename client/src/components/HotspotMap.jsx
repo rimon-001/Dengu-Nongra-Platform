@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { MapContainer, TileLayer, Marker } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Circle } from 'react-leaflet';
 import L from 'leaflet';
-import { Search, Download, Flame, PlaneTakeoff } from 'lucide-react';
+import { Search, Download, Flame, PlaneTakeoff, Sliders, AlertTriangle } from 'lucide-react';
 import HeatmapLayer from './HeatmapLayer';
 import MapController from './MapController';
 import ZoneSelector, { CAMPUS_ZONES } from './ZoneSelector';
@@ -11,23 +11,26 @@ import DrainageLayer from './DrainageLayer';
 import VulnerabilityLayer from './VulnerabilityLayer';
 
 export default function HotspotMap({ 
-  reports, 
+  reports = [], 
   onSelectTask, 
-  searchTerm, 
+  searchTerm = '', 
   setSearchTerm, 
-  filterStatus, 
+  filterStatus = 'all', 
   setFilterStatus,
+  onLaunchModal,
   isBengali = false
 }) {
   const [mapCenter, setMapCenter] = useState([23.8759, 90.3205]);
   const [mapZoom, setMapZoom] = useState(14);
   const [activeZone, setActiveZone] = useState('all');
   const [showDronePath, setShowDronePath] = useState(false);
+  const [heatmapRiskFilter, setHeatmapRiskFilter] = useState('all'); // 'all', 'low', 'moderate', 'high'
 
   // Multi-layer GIS telemetry states
   const [gisOpen, setGisOpen] = useState(false);
   const [layers, setLayers] = useState({
     heatmap: false,
+    breteau: false,
     drainage: false,
     vulnerable: false
   });
@@ -45,6 +48,24 @@ export default function HotspotMap({
     setMapZoom(zone.zoom);
   };
 
+  // Status pill click toggle
+  const handleStatusLegendClick = (statusKey) => {
+    if (filterStatus === statusKey) {
+      setFilterStatus('all');
+    } else {
+      setFilterStatus(statusKey);
+    }
+  };
+
+  // Risk gradient filter click
+  const handleRiskFilterClick = (riskTier) => {
+    // If heatmap isn't active, activate it automatically
+    if (!layers.heatmap) {
+      setLayers(prev => ({ ...prev, heatmap: true }));
+    }
+    setHeatmapRiskFilter(prev => prev === riskTier ? 'all' : riskTier);
+  };
+
   const createCustomIcon = (status) => {
     const color = status === 'resolved' ? 'var(--color-resolved)' : status === 'claimed' ? 'var(--color-progress)' : 'var(--color-reported)';
     return L.divIcon({
@@ -57,15 +78,16 @@ export default function HotspotMap({
 
   const handleExportCSV = () => {
     if (!reports || reports.length === 0) {
-      return alert('No reports to export.');
+      return alert(isBengali ? 'এক্সপোর্ট করার জন্য কোনো রিপোর্ট নেই।' : 'No reports to export.');
     }
 
-    const headers = ['ID', 'Status', 'Latitude', 'Longitude', 'Description', 'Reported At', 'Google Maps Link', 'Photo URL', 'Resolved Proof URL'];
+    const headers = ['ID', 'Tracking Code', 'Status', 'Latitude', 'Longitude', 'Description', 'Reported At', 'Google Maps Link', 'Photo URL', 'Resolved Proof URL'];
     const rows = reports.map(r => {
       const mapsLink = `https://www.google.com/maps?q=${r.latitude},${r.longitude}`;
       const cleanDesc = (r.description || '').replace(/"/g, '""');
       return [
         r.id,
+        r.tracking_code || `NG-${r.id}`,
         r.status,
         r.latitude,
         r.longitude,
@@ -82,12 +104,21 @@ export default function HotspotMap({
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.setAttribute('download', 'nongra-dengue-hotspots.csv');
+    link.setAttribute('download', `nongra-dengue-hotspots-${Date.now()}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
   };
+
+  // Filter reports for Heatmap based on active risk level
+  const heatmapFilteredReports = reports.filter((r) => {
+    if (heatmapRiskFilter === 'all') return true;
+    if (heatmapRiskFilter === 'low') return r.status === 'resolved';
+    if (heatmapRiskFilter === 'moderate') return r.status === 'claimed';
+    if (heatmapRiskFilter === 'high') return r.status === 'reported';
+    return true;
+  });
 
   return (
     <div>
@@ -152,6 +183,7 @@ export default function HotspotMap({
       <ZoneSelector 
         selectedZone={activeZone} 
         onSelectZone={handleZoneSelect} 
+        reports={reports}
         isBengali={isBengali} 
       />
       
@@ -162,6 +194,8 @@ export default function HotspotMap({
           onToggleLayer={handleToggleLayer}
           isOpen={gisOpen}
           onToggleOpen={() => setGisOpen(!gisOpen)}
+          activeRiskFilter={heatmapRiskFilter}
+          onSelectRiskFilter={handleRiskFilterClick}
           isBengali={isBengali}
         />
 
@@ -169,7 +203,7 @@ export default function HotspotMap({
           position: 'absolute',
           top: '20px',
           left: '20px',
-          zIndex: 1000,
+          zIndex: 900,
           background: 'white',
           borderRadius: '24px',
           boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
@@ -196,11 +230,32 @@ export default function HotspotMap({
 
           <MapController center={mapCenter} zoom={mapZoom} />
 
-          {/* GIS Layer: Kernel Density Heatmap */}
-          <HeatmapLayer reports={reports} visible={layers.heatmap} />
+          {/* GIS Layer: Kernel Density Predictive Heatmap */}
+          <HeatmapLayer 
+            reports={heatmapFilteredReports} 
+            visible={layers.heatmap} 
+          />
+
+          {/* GIS Layer: Predictive Breteau Outbreak Perimeter Rings */}
+          {layers.breteau && reports.map((report) => (
+            report.status === 'reported' ? (
+              <Circle
+                key={`breteau-${report.id}`}
+                center={[report.latitude, report.longitude]}
+                radius={85}
+                pathOptions={{
+                  color: '#dc2626',
+                  fillColor: '#ef4444',
+                  fillOpacity: 0.18,
+                  dashArray: '4, 6',
+                  weight: 2
+                }}
+              />
+            ) : null
+          ))}
 
           {/* GIS Layer: Municipal Drainage & Water Network */}
-          <DrainageLayer visible={layers.drainage} />
+          <DrainageLayer visible={layers.drainage} isBengali={isBengali} />
 
           {/* GIS Layer: High-Density Vulnerability Zones */}
           <VulnerabilityLayer visible={layers.vulnerable} isBengali={isBengali} />
@@ -221,16 +276,57 @@ export default function HotspotMap({
           ))}
         </MapContainer>
 
+        {/* Fully Interactive Bottom-Left Map Legend */}
         <div className="map-legend">
-          <div className="legend-item">
-            <div className="legend-dot" style={{ background: 'var(--color-reported)' }}></div> {isBengali ? 'রিপোর্টকৃত' : 'Reported'}
-          </div>
-          <div className="legend-item">
-            <div className="legend-dot" style={{ background: 'var(--color-progress)' }}></div> {isBengali ? 'চলমান' : 'Progress'}
-          </div>
-          <div className="legend-item">
-            <div className="legend-dot" style={{ background: 'var(--color-resolved)' }}></div> {isBengali ? 'সমাধানকৃত' : 'Resolved'}
-          </div>
+          <button
+            type="button"
+            onClick={() => handleStatusLegendClick('reported')}
+            className={`legend-item-btn ${filterStatus === 'reported' ? 'active-filter' : ''}`}
+            title="Filter by Reported"
+          >
+            <div className="legend-dot" style={{ background: 'var(--color-reported)' }}></div>
+            <span>{isBengali ? 'রিপোর্টকৃত' : 'Reported'}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => handleStatusLegendClick('claimed')}
+            className={`legend-item-btn ${filterStatus === 'claimed' ? 'active-filter' : ''}`}
+            title="Filter by In Progress"
+          >
+            <div className="legend-dot" style={{ background: 'var(--color-progress)' }}></div>
+            <span>{isBengali ? 'চলমান' : 'Progress'}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => handleStatusLegendClick('resolved')}
+            className={`legend-item-btn ${filterStatus === 'resolved' ? 'active-filter' : ''}`}
+            title="Filter by Resolved"
+          >
+            <div className="legend-dot" style={{ background: 'var(--color-resolved)' }}></div>
+            <span>{isBengali ? 'সমাধানকৃত' : 'Resolved'}</span>
+          </button>
+
+          {filterStatus !== 'all' && (
+            <button
+              type="button"
+              onClick={() => setFilterStatus('all')}
+              style={{
+                marginLeft: '4px',
+                padding: '2px 8px',
+                borderRadius: '12px',
+                border: 'none',
+                background: '#e2e8f0',
+                color: '#475569',
+                fontSize: '0.68rem',
+                fontWeight: 800,
+                cursor: 'pointer'
+              }}
+            >
+              {isBengali ? 'রিসেট' : 'Reset'}
+            </button>
+          )}
         </div>
       </div>
     </div>

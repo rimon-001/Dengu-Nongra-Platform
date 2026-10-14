@@ -1,7 +1,9 @@
-import React from 'react';
-import { MapPin, Clock, ShieldCheck, AlertCircle } from 'lucide-react';
+import React, { useState } from 'react';
+import { MapPin, Clock, ShieldCheck, AlertCircle, Filter } from 'lucide-react';
 
-export default function ActivityList({ reports, onSelectTask }) {
+export default function ActivityList({ reports = [], onSelectTask, isBengali = false }) {
+  const [filter, setFilter] = useState('all');
+
   const getIconConfig = (status) => {
     if (status === 'resolved') {
       return { className: 'activity-icon green', icon: <ShieldCheck size={20} /> };
@@ -13,23 +15,59 @@ export default function ActivityList({ reports, onSelectTask }) {
   };
 
   const formatRelativeTime = (isoString) => {
-    if (!isoString) return 'Just now';
+    if (!isoString) return isBengali ? 'এইমাত্র' : 'Just now';
     const diffMs = Date.now() - new Date(isoString).getTime();
     const diffMins = Math.floor(diffMs / (1000 * 60));
-    if (diffMins < 60) return `${Math.max(1, diffMins)} mins ago`;
+    if (diffMins < 60) return isBengali ? `${Math.max(1, diffMins)} মিনিট আগে` : `${Math.max(1, diffMins)} mins ago`;
     const diffHours = Math.floor(diffMins / 60);
-    if (diffHours < 24) return `${diffHours} hours ago`;
-    return `${Math.floor(diffHours / 24)} days ago`;
+    if (diffHours < 24) return isBengali ? `${diffHours} ঘণ্টা আগে` : `${diffHours} hours ago`;
+    return isBengali ? `${Math.floor(diffHours / 24)} দিন আগে` : `${Math.floor(diffHours / 24)} days ago`;
   };
+
+  const filteredReports = reports.filter(r => {
+    if (filter === 'pending') return r.status === 'reported';
+    if (filter === 'claimed') return r.status === 'claimed';
+    if (filter === 'resolved') return r.status === 'resolved';
+    return true;
+  });
 
   return (
     <div style={{ marginTop: '28px' }}>
-      <div className="section-header">
-        <h2>Recent Activity</h2>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '8px' }}>
+        <h2 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 800 }}>
+          {isBengali ? 'সর্বশেষ ফিল্ড অ্যাক্টিভিটি' : 'Recent Field Activity'}
+        </h2>
+
+        {/* Filter Pills */}
+        <div style={{ display: 'flex', gap: '4px' }}>
+          {['all', 'pending', 'claimed', 'resolved'].map(f => (
+            <button
+              key={f}
+              type="button"
+              onClick={() => setFilter(f)}
+              style={{
+                border: 'none',
+                background: filter === f ? 'var(--color-primary)' : '#f1f5f9',
+                color: filter === f ? '#fff' : '#64748b',
+                padding: '4px 10px',
+                borderRadius: '12px',
+                fontSize: '0.72rem',
+                fontWeight: 700,
+                textTransform: 'capitalize',
+                cursor: 'pointer'
+              }}
+            >
+              {f === 'all' && (isBengali ? 'সকল' : 'All')}
+              {f === 'pending' && (isBengali ? 'অপেক্ষমাণ' : 'Pending')}
+              {f === 'claimed' && (isBengali ? 'চলমান' : 'Claimed')}
+              {f === 'resolved' && (isBengali ? 'সমাধানকৃত' : 'Resolved')}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="activity-list">
-        {reports.length === 0 ? (
+        {filteredReports.length === 0 ? (
           <div style={{
             background: 'var(--bg-card)',
             padding: '24px',
@@ -38,10 +76,10 @@ export default function ActivityList({ reports, onSelectTask }) {
             textAlign: 'center',
             color: 'var(--text-muted)'
           }}>
-            No recent activity reported.
+            {isBengali ? 'কোনো সাম্প্রতিক কার্যক্রম পাওয়া যায়নি।' : 'No recent activity reported under this filter.'}
           </div>
         ) : (
-          reports.map((report) => {
+          filteredReports.map((report) => {
             const { className, icon } = getIconConfig(report.status);
             return (
               <div 
@@ -55,11 +93,11 @@ export default function ActivityList({ reports, onSelectTask }) {
                   </div>
                   <div>
                     <div className="activity-title">
-                      {report.description || 'Breeding Risk Hotspot'}
+                      {report.description || (isBengali ? 'এডিস প্রজনন ঝুঁকি স্থান' : 'Breeding Risk Hotspot')}
                     </div>
                     <div className="activity-subtitle">
                       <MapPin size={12} style={{ display: 'inline', marginRight: '3px' }} />
-                      Location ID: #{report.id} • Lat: {report.latitude.toFixed(4)}, Lng: {report.longitude.toFixed(4)}
+                      Location #{report.id} • Lat: {Number(report.latitude).toFixed(4)}, Lng: {Number(report.longitude).toFixed(4)}
                     </div>
                   </div>
                 </div>
@@ -79,7 +117,9 @@ export default function ActivityList({ reports, onSelectTask }) {
                     background: report.status === 'resolved' ? '#d1fae5' : report.status === 'claimed' ? '#fef3c7' : '#fee2e2',
                     color: report.status === 'resolved' ? 'var(--color-resolved)' : report.status === 'claimed' ? 'var(--color-progress)' : 'var(--color-reported)'
                   }}>
-                    {report.status}
+                    {isBengali 
+                      ? (report.status === 'resolved' ? 'সমাধানকৃত' : report.status === 'claimed' ? 'চলমান' : 'রিপোর্টকৃত')
+                      : report.status}
                   </span>
                 </div>
               </div>

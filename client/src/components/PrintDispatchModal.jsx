@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Printer, ShieldAlert, CheckSquare, MapPin } from 'lucide-react';
+import { X, Printer, ShieldAlert, CheckSquare, MapPin, QrCode } from 'lucide-react';
 
 export default function PrintDispatchModal({ isOpen, onClose, reports = [], isBengali = false }) {
   if (!isOpen) return null;
@@ -12,7 +12,7 @@ export default function PrintDispatchModal({ isOpen, onClose, reports = [], isBe
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '640px', maxHeight: '90vh', overflowY: 'auto' }}>
+      <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '660px', maxHeight: '90vh', overflowY: 'auto' }}>
         <button className="modal-close" onClick={onClose}>
           <X size={18} color="#64748b" />
         </button>
@@ -47,9 +47,10 @@ export default function PrintDispatchModal({ isOpen, onClose, reports = [], isBe
             </button>
           </div>
 
-          <div style={{ fontSize: '0.8rem', color: '#475569', marginBottom: '16px', display: 'flex', gap: '20px' }}>
+          <div style={{ fontSize: '0.8rem', color: '#475569', marginBottom: '16px', display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
             <span><strong>Date:</strong> {new Date().toLocaleDateString()}</span>
             <span><strong>Sector:</strong> Ashulia / Permanent Campus</span>
+            <span><strong>Assigned Squad:</strong> Rapid Response Alpha</span>
             <span><strong>Pending Sites:</strong> {activeReports.length}</span>
           </div>
 
@@ -69,10 +70,10 @@ export default function PrintDispatchModal({ isOpen, onClose, reports = [], isBe
                   <td style={{ padding: '8px', fontWeight: 700 }}>#{r.id}</td>
                   <td style={{ padding: '8px' }}>{r.description || 'Breeding site'}</td>
                   <td style={{ padding: '8px', color: '#64748b' }}>
-                    {r.latitude.toFixed(4)}, {r.longitude.toFixed(4)}
+                    {Number(r.latitude).toFixed(4)}, {Number(r.longitude).toFixed(4)}
                   </td>
                   <td style={{ padding: '8px' }}>
-                    <span style={{ fontSize: '0.72rem', padding: '2px 6px', borderRadius: '4px', background: '#f1f5f9' }}>
+                    <span style={{ fontSize: '0.72rem', padding: '2px 6px', borderRadius: '4px', background: '#f1f5f9', color: '#0f766e', fontWeight: 700 }}>
                       Bti / Drainage
                     </span>
                   </td>
@@ -84,8 +85,14 @@ export default function PrintDispatchModal({ isOpen, onClose, reports = [], isBe
             </tbody>
           </table>
 
-          <div style={{ background: '#f8fafc', padding: '12px', borderRadius: '8px', border: '1px solid var(--border)', fontSize: '0.75rem', color: '#64748b' }}>
-            <strong>Operational Protocol:</strong> Field personnel must apply biological larvicide (Bti) or empty standing water containers within 24 hours of notification to prevent pupal emergence.
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f8fafc', padding: '12px', borderRadius: '8px', border: '1px solid var(--border)', fontSize: '0.75rem', color: '#64748b' }}>
+            <div>
+              <strong>Operational Directive:</strong> Field personnel must apply biological larvicide (Bti) or empty standing water containers within 24 hours to prevent pupal emergence.
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#0f766e', fontWeight: 800, marginLeft: '12px' }}>
+              <QrCode size={20} />
+              <span>NONGRA-MANIFEST-2026</span>
+            </div>
           </div>
         </div>
       </div>

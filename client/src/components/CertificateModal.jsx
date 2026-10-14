@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Award, Printer, CheckCircle, ShieldCheck } from 'lucide-react';
+import { X, Award, Printer, CheckCircle, ShieldCheck, QrCode } from 'lucide-react';
 
 export default function CertificateModal({ isOpen, onClose, user, isBengali = false }) {
   if (!isOpen || !user) return null;
@@ -82,12 +82,12 @@ export default function CertificateModal({ isOpen, onClose, user, isBengali = fa
               padding: '4px 32px 8px',
               marginBottom: '16px'
             }}>
-              {user.username}
+              {user.username || user.name}
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', marginBottom: '24px' }}>
               <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#334155' }}>
-                🏆 {isBengali ? 'অর্জিত স্কোর:' : 'Points Earned:'} {user.points} pts
+                🏆 {isBengali ? 'অর্জিত স্কোর:' : 'Points Earned:'} {user.points || 50} pts
               </span>
               <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#16a34a' }}>
                 <ShieldCheck size={14} style={{ display: 'inline', marginRight: '4px' }} />
@@ -98,7 +98,9 @@ export default function CertificateModal({ isOpen, onClose, user, isBengali = fa
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', borderTop: '1px solid #e2e8f0', paddingTop: '16px', fontSize: '0.78rem', color: '#64748b' }}>
               <div style={{ textAlign: 'left' }}>
                 <strong>{isBengali ? 'তারিখ:' : 'Date Issued:'}</strong> {currentDate}
-                <div style={{ fontSize: '0.7rem', color: '#94a3b8' }}>ID: NONGRA-{user.id || '01'}-2026</div>
+                <div style={{ fontSize: '0.7rem', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
+                  <QrCode size={11} /> ID: NONGRA-{user.id || '01'}-2026
+                </div>
               </div>
 
               <div style={{ textAlign: 'right' }}>

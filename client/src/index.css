@@ -18,22 +18,302 @@
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
+/* ==========================================================================
+   Project Themed Vector Illustration Background
+   ========================================================================== */
 body {
   margin: 0;
-  background-color: var(--bg-main);
-  color: var(--text-main);
   padding-bottom: 90px;
+  color: var(--text-main);
+  background-color: #f1f5f9;
+  position: relative;
+  overflow-x: hidden;
+  min-height: 100vh;
+}
+
+/* Dedicated Background Canvas Layer */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background-image: url('/dengue-bg.jpg');
+  background-size: cover;
+  background-position: center bottom;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
+/* Subtle Readability Overlay: keeps the artwork visible while ensuring text/cards pop */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    rgba(248, 250, 252, 0.88) 0%,
+    rgba(248, 250, 252, 0.72) 40%,
+    rgba(248, 250, 252, 0.82) 100%
+  );
 }
 
 .container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 24px 20px 40px 20px;
+  padding: 18px 20px 40px 20px;
+  position: relative;
+  z-index: 1;
+}
+
+/* =========================================
+   National Portal Dynamic Slideshow Header
+========================================= */
+.portal-banner-container {
+  position: relative;
+  width: 100%;
+  height: 250px;
+  border-radius: 16px;
+  overflow: hidden;
+  margin-bottom: 12px;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.08);
+  border: 1px solid var(--border);
+  background: #0f172a;
+}
+
+@media (max-width: 768px) {
+  .portal-banner-container {
+    height: 210px;
+  }
+}
+
+.portal-slides-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.portal-slide {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.8s ease-in-out;
+}
+
+.portal-slide.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.portal-slide-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scale(1);
+  transition: transform 6s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.portal-slide.active .portal-slide-img {
+  transform: scale(1.08);
+}
+
+.portal-slide-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    rgba(15, 23, 42, 0.88) 0%,
+    rgba(15, 118, 110, 0.65) 50%,
+    rgba(15, 23, 42, 0.25) 100%
+  );
+}
+
+.portal-slide-content {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 0 36px;
+  color: #ffffff;
+  z-index: 2;
+}
+
+@media (max-width: 600px) {
+  .portal-slide-content {
+    padding: 0 18px;
+  }
+}
+
+.portal-badge-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.portal-govt-emblem {
+  width: 32px;
+  height: 32px;
+  background: #059669;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+  border: 1.5px solid rgba(255, 255, 255, 0.8);
+}
+
+.portal-badge-text {
+  font-size: 0.76rem;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #a7f3d0;
+  background: rgba(4, 120, 87, 0.45);
+  padding: 3px 10px;
+  border-radius: 20px;
+  border: 1px solid rgba(110, 231, 183, 0.35);
+  backdrop-filter: blur(4px);
+}
+
+.portal-banner-title {
+  margin: 0 0 6px 0;
+  font-size: 1.65rem;
+  font-weight: 800;
+  line-height: 1.25;
+  color: #ffffff;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.35);
+}
+
+@media (max-width: 600px) {
+  .portal-banner-title {
+    font-size: 1.25rem;
+  }
+}
+
+.portal-banner-subtitle {
+  margin: 0;
+  font-size: 0.88rem;
+  color: #e2e8f0;
+  max-width: 620px;
+  line-height: 1.4;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+/* Banner Nav Controls */
+.portal-nav-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255, 255, 255, 0.22);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #ffffff;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 3;
+  transition: all 0.2s ease;
+}
+
+.portal-nav-btn:hover {
+  background: rgba(255, 255, 255, 0.5);
+  transform: translateY(-50%) scale(1.08);
+}
+
+.portal-nav-prev { left: 14px; }
+.portal-nav-next { right: 14px; }
+
+/* Banner Slide Dots */
+.portal-slide-dots {
+  position: absolute;
+  bottom: 12px;
+  right: 24px;
+  display: flex;
+  gap: 6px;
+  z-index: 3;
+}
+
+.portal-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.4);
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.portal-dot.active {
+  width: 22px;
+  background: #34d399;
+}
+
+/* =========================================
+   Live Headline News Marquee
+========================================= */
+.portal-marquee-bar {
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+
+.marquee-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #ef4444;
+  color: #ffffff;
+  padding: 8px 14px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+}
+
+.marquee-content-wrap {
+  flex: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  padding-left: 10px;
+}
+
+.marquee-text {
+  display: inline-block;
+  padding-left: 100%;
+  animation: marquee 24s linear infinite;
+  font-size: 0.82rem;
+  color: #334155;
+  font-weight: 600;
+}
+
+.marquee-text:hover {
+  animation-play-state: paused;
+}
+
+@keyframes marquee {
+  0% { transform: translate(0, 0); }
+  100% { transform: translate(-100%, 0); }
 }
 
 /* Header & Brand Identity */
 .hero-header {
-  margin-bottom: 28px;
+  margin-bottom: 24px;
 }
 
 .brand-badge {
@@ -85,10 +365,11 @@ body {
 }
 
 .metric-card {
-  background: var(--bg-card);
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(10px);
   padding: 20px 24px;
   border-radius: 14px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05);
   border: 1px solid var(--border);
 }
 
@@ -132,47 +413,71 @@ body {
 }
 
 .map-wrapper {
-  background: var(--bg-card);
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(10px);
   padding: 6px;
   border-radius: 16px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07);
   border: 1px solid var(--border);
   margin-bottom: 32px;
   position: relative;
 }
 
 .map-container {
-  height: 420px;
+  height: 440px;
   border-radius: 12px;
   z-index: 1;
 }
 
-/* Map Legend */
+/* Interactive Map Legend Styling */
 .map-legend {
   position: absolute;
   bottom: 20px;
-  right: 20px;
-  background: white;
-  padding: 10px 14px;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-  z-index: 1000;
-  font-size: 0.8rem;
-  font-weight: 500;
+  left: 20px;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(8px);
+  padding: 6px 12px;
+  border-radius: 24px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+  border: 1px solid var(--border);
+  z-index: 900;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  align-items: center;
   gap: 8px;
 }
 
-.legend-item { 
-  display: flex; 
-  align-items: center; 
-  gap: 8px; 
+.legend-item-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: 1px solid transparent;
+  padding: 4px 8px;
+  border-radius: 14px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--text-main);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.legend-item-btn:hover {
+  background: #f1f5f9;
+}
+
+.legend-item-btn.active-filter {
+  background: #0f172a;
+  color: #ffffff;
+}
+
+.legend-item-btn.active-filter .legend-dot {
+  box-shadow: 0 0 6px #ffffff;
 }
 
 .legend-dot { 
-  width: 10px; 
-  height: 10px; 
+  width: 9px; 
+  height: 9px; 
   border-radius: 50%; 
 }
 
@@ -184,7 +489,8 @@ body {
 }
 
 .activity-card {
-  background: var(--bg-card);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(8px);
   padding: 16px 20px;
   border-radius: 12px;
   border: 1px solid var(--border);
@@ -197,7 +503,7 @@ body {
 
 .activity-card:hover { 
   transform: translateY(-1px); 
-  box-shadow: 0 4px 10px rgba(0,0,0,0.04); 
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.07); 
 }
 
 .activity-main { 
@@ -239,8 +545,8 @@ body {
 .modal-overlay {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(15, 23, 42, 0.45);
-  backdrop-filter: blur(3px);
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(6px);
   z-index: 2000;
   display: flex;
   align-items: center;
@@ -249,12 +555,12 @@ body {
 }
 
 .modal-content {
-  background: var(--bg-card);
+  background: #ffffff;
   width: 100%;
   max-width: 440px;
   border-radius: 18px;
   overflow: hidden;
-  box-shadow: 0 12px 30px rgba(0,0,0,0.12);
+  box-shadow: 0 20px 45px rgba(15, 23, 42, 0.22);
   position: relative;
 }
 
@@ -400,13 +706,15 @@ body {
   left: 0; 
   right: 0;
   height: 72px;
-  background: var(--bg-card);
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(12px);
   border-top: 1px solid var(--border);
   display: flex;
   justify-content: center;
   align-items: center;
   gap: 48px;
   z-index: 1000;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.03);
 }
 
 .nav-item { 
@@ -462,4 +770,51 @@ body {
   font-size: 0.75rem;
   font-weight: 600;
   color: var(--color-primary);
+}
+
+/* ==========================================================================
+   Project Background Illustration (dengue-bg.png)
+   ========================================================================== */
+html, body {
+  background: transparent !important;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background-image: url('/dengue-bg.png');
+  background-size: cover;
+  background-position: center bottom;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    rgba(248, 250, 252, 0.82) 0%,
+    rgba(241, 245, 249, 0.70) 50%,
+    rgba(248, 250, 252, 0.85) 100%
+  );
+}
+
+.container {
+  position: relative;
+  z-index: 1;
+}
+
+.metric-card,
+.activity-card,
+.map-wrapper,
+.portal-marquee-bar {
+  background: rgba(255, 255, 255, 0.93) !important;
+  backdrop-filter: blur(10px);
 }

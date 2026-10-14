@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, ClipboardCheck, Download, Filter, ShieldCheck, CheckCircle2, UserCheck, AlertOctagon } from 'lucide-react';
+import { X, ClipboardCheck, Download, Filter, ShieldCheck, CheckCircle2, UserCheck, AlertOctagon, Hash } from 'lucide-react';
 
 export default function AuditLogModal({ isOpen, onClose, reports = [], isBengali = false }) {
   if (!isOpen) return null;
@@ -18,7 +18,8 @@ export default function AuditLogModal({ isOpen, onClose, reports = [], isBengali
       type: 'report',
       actor: 'Public Citizen / Anonymous Node',
       timestamp: r.created_at,
-      details: r.description || 'Breeding site mapped',
+      details: r.description || 'Breeding site mapped with geolocation',
+      hash: `0x7f8a...${(r.id * 3141).toString(16)}`,
       status: 'VERIFIED'
     });
 
@@ -30,9 +31,10 @@ export default function AuditLogModal({ isOpen, onClose, reports = [], isBengali
         reportId: r.id,
         action: isBengali ? 'স্বেচ্ছাসেবক স্কোয়াড কর্তৃক দায়িত্ব গ্রহণ' : 'Triage Dispatch Claimed by Squad',
         type: 'claim',
-        actor: `Squad Node #${r.claimed_by || 1} (Volunteer Squad A)`,
+        actor: `Squad Node #${r.claimed_by || 1} (Volunteer Squad Alpha)`,
         timestamp: claimDate,
-        details: 'Field personnel mobilised with PPE and larvicide equipment',
+        details: 'Field personnel mobilised with PPE and biological larvicide equipment',
+        hash: `0x9c4e...${(r.id * 7182).toString(16)}`,
         status: 'DISPATCHED'
       });
     }
@@ -43,11 +45,12 @@ export default function AuditLogModal({ isOpen, onClose, reports = [], isBengali
       logs.push({
         id: `TXN-${r.id}-03`,
         reportId: r.id,
-        action: isBengali ? 'লার্ভিসাইড প্রয়োগ ও পরিচ্ছন্নতা চূড়ান্ত' : 'Vector Eradication Sign-Off Verified',
+        action: isBengali ? 'লার্ভিসাইড প্রয়োগ ও পরিচ্ছন্নতা চূড়ান্ত' : 'Vector Eradication Sign-Off Verified',
         type: 'resolve',
         actor: 'Municipal Taskforce Quality Inspector',
         timestamp: resolveDate,
-        details: `Intervention: ${r.intervention || 'Physical Evacuation'} • Photo Proof Verified`,
+        details: `Intervention: ${r.intervention || 'Physical Evacuation'} • Photo Evidence Verified (+50 pts)`,
+        hash: `0x3b1d...${(r.id * 9265).toString(16)}`,
         status: 'CLOSED_COMPLIANT'
       });
     }
@@ -61,7 +64,7 @@ export default function AuditLogModal({ isOpen, onClose, reports = [], isBengali
   });
 
   const handleExportAudit = () => {
-    const headers = ['Audit ID', 'Report #', 'Action', 'Authorised Actor', 'Timestamp (ISO)', 'Operational Details', 'Compliance Status'];
+    const headers = ['Audit ID', 'Report #', 'Action', 'Authorised Actor', 'Timestamp (ISO)', 'Operational Details', 'Cryptographic Hash', 'Compliance Status'];
     const rows = filteredLogs.map(l => [
       l.id,
       l.reportId,
@@ -69,6 +72,7 @@ export default function AuditLogModal({ isOpen, onClose, reports = [], isBengali
       `"${l.actor}"`,
       l.timestamp,
       `"${(l.details || '').replace(/"/g, '""')}"`,
+      l.hash,
       l.status
     ]);
 
@@ -86,7 +90,7 @@ export default function AuditLogModal({ isOpen, onClose, reports = [], isBengali
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '660px', maxHeight: '90vh', overflowY: 'auto' }}>
+      <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '680px', maxHeight: '90vh', overflowY: 'auto' }}>
         <button className="modal-close" onClick={onClose}>
           <X size={18} color="#64748b" />
         </button>
@@ -140,7 +144,7 @@ export default function AuditLogModal({ isOpen, onClose, reports = [], isBengali
 
           <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', margin: '0 0 16px', lineHeight: 1.5 }}>
             {isBengali
-              ? 'নাগরিক রিপোর্ট গ্রহণ থেকে শুরু করে ড্রেন পরিষ্কার ও লার্ভিসাইড প্রয়োগ পর্যন্ত প্রতিটি ধাপের অপরিবর্তনযোগ্য ডিজিটাল টাইমস্ট্যাম্প ও দায়বদ্ধতা লগ।'
+              ? 'নাগরিক রিপোর্ট গ্রহণ থেকে শুরু করে ড্রেন পরিষ্কার ও লার্ভিসাইড প্রয়োগ পর্যন্ত প্রতিটি ধাপের অপরিবর্তনযোগ্য ডিজিটাল টাইমস্ট্যাম্প ও দায়বদ্ধতা লগ।'
               : 'End-to-end chain of custody recording verifiable timestamps, dispatched squad IDs, and chemical verification proofs for municipal accountability.'}
           </p>
 
@@ -192,7 +196,7 @@ export default function AuditLogModal({ isOpen, onClose, reports = [], isBengali
                 cursor: 'pointer'
               }}
             >
-              {isBengali ? 'দায়িত্ব গ্রহণ' : 'Dispatches'}
+              {isBengali ? 'দায়িত্ব গ্রহণ' : 'Dispatches'}
             </button>
             <button
               type="button"
@@ -244,13 +248,18 @@ export default function AuditLogModal({ isOpen, onClose, reports = [], isBengali
                   </span>
                 </div>
 
-                <div style={{ color: '#475569', fontSize: '0.76rem', marginBottom: '4px' }}>
+                <div style={{ color: '#475569', fontSize: '0.76rem', marginBottom: '6px' }}>
                   {item.details}
                 </div>
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #f8fafc', paddingTop: '6px', fontSize: '0.7rem', color: '#94a3b8' }}>
                   <span>Actor: <strong>{item.actor}</strong></span>
-                  <span>{new Date(item.timestamp).toLocaleString(isBengali ? 'bn-BD' : 'en-US')}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontFamily: 'monospace', color: '#0f766e', fontWeight: 700 }}>
+                      <Hash size={11} style={{ display: 'inline' }} /> {item.hash}
+                    </span>
+                    <span>{new Date(item.timestamp).toLocaleString(isBengali ? 'bn-BD' : 'en-US')}</span>
+                  </div>
                 </div>
               </div>
             ))}

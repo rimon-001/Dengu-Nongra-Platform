@@ -53,7 +53,7 @@ db.serialize(() => {
     )
   `);
 
-  // 4. Audit Log Table
+  // 4. Audit Log Table with SHA-256 State Hashes
   db.run(`
     CREATE TABLE IF NOT EXISTS audit_logs (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -62,7 +62,36 @@ db.serialize(() => {
       actor_name TEXT NOT NULL,
       actor_role TEXT NOT NULL,
       details TEXT,
+      state_hash TEXT DEFAULT '0x00000000',
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  // Auto-migration: Ensure state_hash column exists even if audit_logs was created in an older run
+  db.all("PRAGMA table_info(audit_logs);", (err, rows) => {
+    if (!err && Array.isArray(rows)) {
+      const hasHash = rows.some((r) => r.name === 'state_hash');
+      if (!hasHash) {
+        db.run("ALTER TABLE audit_logs ADD COLUMN state_hash TEXT DEFAULT '0x00000000';", (alterErr) => {
+          if (!alterErr) {
+            console.log("Migration: Added missing 'state_hash' column to audit_logs table.");
+          }
+        });
+      }
+    }
+  });
+
+  // 5. Citizen Rating & Reviews Table
+  db.run(`
+    CREATE TABLE IF NOT EXISTS citizen_reviews (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      report_id INTEGER NOT NULL,
+      rating INTEGER CHECK(rating >= 1 AND rating <= 5) NOT NULL,
+      comment TEXT,
+      reviewer_name TEXT NOT NULL,
+      re_infested INTEGER DEFAULT 0,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (report_id) REFERENCES reports(id)
     )
   `);
 
@@ -71,7 +100,7 @@ db.serialize(() => {
   const defaultPass = bcrypt.hashSync('password123', salt);
 
   db.get('SELECT COUNT(*) as count FROM users', (err, row) => {
-    if (!err && row.count === 0) {
+    if (!err && row && row.count === 0) {
       console.log('Seeding initial demo accounts...');
       
       // Seed Citizen

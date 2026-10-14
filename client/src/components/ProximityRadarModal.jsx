@@ -1,14 +1,28 @@
 import React, { useState, useEffect } from 'react';
-import { X, Radar, Volume2, VolumeX, AlertTriangle, ShieldCheck, Navigation2, Compass } from 'lucide-react';
+import { X, Radar, Volume2, VolumeX, AlertTriangle, ShieldCheck, Navigation2, Compass, Radio } from 'lucide-react';
 
 export default function ProximityRadarModal({ isOpen, onClose, reports = [], isBengali = false }) {
   if (!isOpen) return null;
 
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [userSimLat, setUserSimLat] = useState(23.8765);
-  const [userSimLng, setUserSimLng] = useState(23.8765 ? 90.3204 : 90.3204);
+  const [userSimLng, setUserSimLng] = useState(90.3204);
   const [nearestSite, setNearestSite] = useState(null);
   const [nearestDistance, setNearestDistance] = useState(0);
+
+  // Acquire live GPS on mount with fallback
+  useEffect(() => {
+    if ('geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          setUserSimLat(pos.coords.latitude);
+          setUserSimLng(pos.coords.longitude);
+        },
+        () => null,
+        { enableHighAccuracy: true, timeout: 6000 }
+      );
+    }
+  }, []);
 
   // Haversine distance calculator in meters
   const computeDistanceMeters = (lat1, lon1, lat2, lon2) => {
@@ -56,7 +70,7 @@ export default function ProximityRadarModal({ isOpen, onClose, reports = [], isB
       const gain = ctx.createGain();
 
       osc.type = 'sine';
-      osc.frequency.setValueAtTime(nearestDistance < 120 ? 880 : 540, ctx.currentTime);
+      osc.frequency.setValueAtTime(nearestDistance < 120 ? 920 : 540, ctx.currentTime);
       gain.gain.setValueAtTime(0.12, ctx.currentTime);
       gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
 
@@ -71,9 +85,9 @@ export default function ProximityRadarModal({ isOpen, onClose, reports = [], isB
 
   const handleSimWalkCloser = () => {
     if (!nearestSite) return;
-    // Step 20 meters closer towards the nearest site
-    setUserSimLat(prev => prev + (nearestSite.latitude - prev) * 0.3);
-    setUserSimLng(prev => prev + (nearestSite.longitude - prev) * 0.3);
+    // Step closer towards the nearest site
+    setUserSimLat(prev => prev + (nearestSite.latitude - prev) * 0.35);
+    setUserSimLng(prev => prev + (nearestSite.longitude - prev) * 0.35);
 
     if (soundEnabled) {
       triggerSonarBeep();
@@ -103,7 +117,7 @@ export default function ProximityRadarModal({ isOpen, onClose, reports = [], isB
                 alignItems: 'center',
                 justifyContent: 'center'
               }}>
-                <Radar size={20} className="spin-anim" />
+                <Radar size={20} />
               </div>
               <div>
                 <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800 }}>
@@ -137,32 +151,91 @@ export default function ProximityRadarModal({ isOpen, onClose, reports = [], isB
             </button>
           </div>
 
-          <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', margin: '0 0 18px', lineHeight: 1.5 }}>
+          <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', margin: '0 0 16px', lineHeight: 1.5 }}>
             {isBengali
-              ? 'ক্যাম্পাস বা রাস্তায় চলার সময় আপনি কোনো এডিস মশার প্রজননস্থলের ১৫০ মিটারের মধ্যে প্রবেশ করলে স্বয়ংক্রিয়ভাবে অডিও বিপ সংকেত বেজে উঠবে।'
+              ? 'ক্যাম্পাস বা রাস্তায় চলার সময় আপনি কোনো এডিস মশার প্রজননস্থলের ১৫০ মিটারের মধ্যে প্রবেশ করলে স্বয়ংক্রিয়ভাবে অডিও বিপ সংকেত বেজে উঠবে।'
               : 'Emits localized ultrasonic audio alerts and dynamic threat indicators when field responders enter a 150m radius of active larval pools.'}
           </p>
+
+          {/* Visual Sonar Radar Display */}
+          <div style={{
+            position: 'relative',
+            width: '180px',
+            height: '180px',
+            margin: '0 auto 16px auto',
+            borderRadius: '50%',
+            background: '#0f172a',
+            border: `2px solid ${isCriticalZone ? '#ef4444' : '#0f766e'}`,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            overflow: 'hidden',
+            boxShadow: `0 0 20px ${isCriticalZone ? 'rgba(239, 68, 68, 0.4)' : 'rgba(15, 118, 110, 0.3)'}`
+          }}>
+            {/* Concentric rings */}
+            <div style={{ position: 'absolute', width: '130px', height: '130px', borderRadius: '50%', border: '1px dashed rgba(255,255,255,0.15)' }} />
+            <div style={{ position: 'absolute', width: '80px', height: '80px', borderRadius: '50%', border: '1px solid rgba(255,255,255,0.2)' }} />
+            <div style={{ position: 'absolute', width: '30px', height: '30px', borderRadius: '50%', border: '1px solid rgba(255,255,255,0.25)' }} />
+
+            {/* Sweeping radar scanner line */}
+            <div style={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              width: '90px',
+              height: '90px',
+              transformOrigin: '0 0',
+              background: `conic-gradient(from 0deg, transparent 0deg, ${isCriticalZone ? 'rgba(239, 68, 68, 0.45)' : 'rgba(56, 189, 248, 0.35)'} 60deg, transparent 65deg)`,
+              animation: 'radarSweep 2.2s linear infinite'
+            }} />
+
+            {/* User Center Blip */}
+            <div style={{
+              width: '10px',
+              height: '10px',
+              borderRadius: '50%',
+              background: '#38bdf8',
+              boxShadow: '0 0 8px #38bdf8',
+              zIndex: 2
+            }} />
+
+            {/* Target Blip */}
+            {nearestSite && (
+              <div style={{
+                position: 'absolute',
+                top: isCriticalZone ? '34%' : '20%',
+                right: isCriticalZone ? '32%' : '24%',
+                width: '8px',
+                height: '8px',
+                borderRadius: '50%',
+                background: '#ef4444',
+                boxShadow: '0 0 10px #ef4444',
+                animation: 'pulse 1s infinite',
+                zIndex: 2
+              }} />
+            )}
+          </div>
 
           {/* Proximity Distance Dial */}
           <div style={{
             background: isCriticalZone ? '#fef2f2' : '#f0fdf4',
             border: `1px solid ${isCriticalZone ? '#fca5a5' : '#bbf7d0'}`,
             borderRadius: '16px',
-            padding: '24px 18px',
+            padding: '18px',
             textAlign: 'center',
-            marginBottom: '18px'
+            marginBottom: '16px'
           }}>
-            <div style={{ fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', color: isCriticalZone ? '#b91c1c' : '#15803d', letterSpacing: '0.5px' }}>
+            <div style={{ fontSize: '0.74rem', fontWeight: 800, textTransform: 'uppercase', color: isCriticalZone ? '#b91c1c' : '#15803d', letterSpacing: '0.5px' }}>
               {isCriticalZone
                 ? (isBengali ? 'সতর্কতা: উচ্চ ঝুঁকি অঞ্চলের নিকটে' : 'WARNING: ACTIVE VECTOR ZONE NEARBY')
                 : (isBengali ? 'নিরাপদ দূরত্বে অবস্থান করছেন' : 'CLEAR: NO IMMEDIATE PERIL DETECTED')}
             </div>
 
-            <div style={{ fontSize: '3rem', fontWeight: 900, color: isCriticalZone ? '#dc2626' : '#16a34a', margin: '4px 0' }}>
-              {nearestDistance} <span style={{ fontSize: '1.2rem', fontWeight: 700 }}>meters</span>
+            <div style={{ fontSize: '2.8rem', fontWeight: 900, color: isCriticalZone ? '#dc2626' : '#16a34a', margin: '2px 0' }}>
+              {nearestDistance} <span style={{ fontSize: '1.1rem', fontWeight: 700 }}>meters</span>
             </div>
 
-            <div style={{ fontSize: '0.84rem', color: '#334155', fontWeight: 600 }}>
+            <div style={{ fontSize: '0.82rem', color: '#334155', fontWeight: 600 }}>
               {isBengali ? 'নিকটতম ঝুঁকি:' : 'Nearest Target:'} <strong>{nearestSite ? nearestSite.description : 'Scanning surroundings...'}</strong>
             </div>
           </div>
@@ -179,7 +252,8 @@ export default function ProximityRadarModal({ isOpen, onClose, reports = [], isB
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: '6px',
-                fontSize: '0.82rem'
+                fontSize: '0.82rem',
+                padding: '10px'
               }}
             >
               <Navigation2 size={16} />
@@ -204,11 +278,18 @@ export default function ProximityRadarModal({ isOpen, onClose, reports = [], isB
             </button>
           </div>
 
-          <div style={{ background: '#f8fafc', padding: '12px', borderRadius: '10px', border: '1px solid var(--border)', fontSize: '0.75rem', color: '#64748b' }}>
+          <div style={{ background: '#f8fafc', padding: '12px', borderRadius: '10px', border: '1px solid var(--border)', fontSize: '0.74rem', color: '#64748b' }}>
             <strong>Municipal GPS Geo-Fence Protocol:</strong> Autonomous device telemetry polls location coordinates at 10-second intervals to warn sanitation inspectors before stepping into infested standing drains.
           </div>
         </div>
       </div>
+
+      <style>{`
+        @keyframes radarSweep {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
 }

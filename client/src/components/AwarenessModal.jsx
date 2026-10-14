@@ -1,14 +1,31 @@
 import React, { useState } from 'react';
-import { X, BookOpen, Clock, Droplets, ShieldCheck, AlertTriangle, Fish, Sun, Moon } from 'lucide-react';
+import { 
+  X, BookOpen, Clock, Droplets, ShieldCheck, AlertTriangle, 
+  Fish, Sun, CheckSquare, Square, ChevronRight, CheckCircle2 
+} from 'lucide-react';
 
 export default function AwarenessModal({ isOpen, onClose, isBengali = false }) {
   if (!isOpen) return null;
 
   const [activeTab, setActiveTab] = useState('3day');
+  const [checklist, setChecklist] = useState({
+    rooftop: false,
+    pots: true,
+    acTray: false,
+    refrigerator: false,
+    overheadTank: true
+  });
+
+  const toggleCheck = (key) => {
+    setChecklist(prev => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const completedChecks = Object.values(checklist).filter(Boolean).length;
+  const totalChecks = Object.keys(checklist).length;
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '600px', maxHeight: '90vh', overflowY: 'auto' }}>
+      <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '620px', maxHeight: '90vh', overflowY: 'auto' }}>
         <button className="modal-close" onClick={onClose}>
           <X size={18} color="#64748b" />
         </button>
@@ -36,7 +53,7 @@ export default function AwarenessModal({ isOpen, onClose, isBengali = false }) {
           </p>
 
           {/* Tab Navigation */}
-          <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', borderBottom: '1px solid var(--border)', paddingBottom: '8px' }}>
+          <div style={{ display: 'flex', gap: '6px', marginBottom: '16px', borderBottom: '1px solid var(--border)', paddingBottom: '8px', flexWrap: 'wrap' }}>
             <button
               type="button"
               onClick={() => setActiveTab('3day')}
@@ -46,12 +63,29 @@ export default function AwarenessModal({ isOpen, onClose, isBengali = false }) {
                 border: 'none',
                 background: activeTab === '3day' ? 'var(--color-primary)' : '#f1f5f9',
                 color: activeTab === '3day' ? '#fff' : 'var(--text-main)',
-                fontSize: '0.78rem',
+                fontSize: '0.76rem',
                 fontWeight: 700,
                 cursor: 'pointer'
               }}
             >
-              {isBengali ? '৩ দিনের নিয়ম' : '3-Day Water Rule'}
+              {isBengali ? '৩ দিনের নিয়ম' : '3-Day Water Rule'}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab('checklist')}
+              style={{
+                padding: '6px 12px',
+                borderRadius: '8px',
+                border: 'none',
+                background: activeTab === 'checklist' ? 'var(--color-primary)' : '#f1f5f9',
+                color: activeTab === 'checklist' ? '#fff' : 'var(--text-main)',
+                fontSize: '0.76rem',
+                fontWeight: 700,
+                cursor: 'pointer'
+              }}
+            >
+              {isBengali ? 'বাসা/হলের চেকলিস্ট' : 'Dorm Inspection Checklist'}
             </button>
 
             <button
@@ -63,12 +97,12 @@ export default function AwarenessModal({ isOpen, onClose, isBengali = false }) {
                 border: 'none',
                 background: activeTab === 'biting' ? 'var(--color-primary)' : '#f1f5f9',
                 color: activeTab === 'biting' ? '#fff' : 'var(--text-main)',
-                fontSize: '0.78rem',
+                fontSize: '0.76rem',
                 fontWeight: 700,
                 cursor: 'pointer'
               }}
             >
-              {isBengali ? 'কামড়ানোর পিক সময়' : 'Biting Hours'}
+              {isBengali ? 'কামড়ানোর পিক সময়' : 'Biting Hours'}
             </button>
 
             <button
@@ -80,7 +114,7 @@ export default function AwarenessModal({ isOpen, onClose, isBengali = false }) {
                 border: 'none',
                 background: activeTab === 'biocontrol' ? 'var(--color-primary)' : '#f1f5f9',
                 color: activeTab === 'biocontrol' ? '#fff' : 'var(--text-main)',
-                fontSize: '0.78rem',
+                fontSize: '0.76rem',
                 fontWeight: 700,
                 cursor: 'pointer'
               }}
@@ -89,7 +123,7 @@ export default function AwarenessModal({ isOpen, onClose, isBengali = false }) {
             </button>
           </div>
 
-          {/* Tab Content */}
+          {/* Tab 1: 3-Day Rule */}
           {activeTab === '3day' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               <div style={{ background: '#f8fafc', padding: '14px', borderRadius: '10px', border: '1px solid var(--border)' }}>
@@ -99,24 +133,71 @@ export default function AwarenessModal({ isOpen, onClose, isBengali = false }) {
                 </strong>
                 <p style={{ margin: '6px 0 0', fontSize: '0.8rem', color: '#475569', lineHeight: 1.5 }}>
                   {isBengali
-                    ? 'এডিস মশার ডিম থেকে পূর্ণাঙ্গ মশায় রূপ নিতে ৭ থেকে ১০ দিন সময় লাগে। প্রতি ৩ দিনে ফুলদানি, এয়ারকুলার ও ড্রামের পানি উল্টে দিলে লার্ভা পূর্ণাঙ্গ মশা হতে পারে না।'
+                    ? 'এডিস মশার ডিম থেকে পূর্ণাঙ্গ মশায় রূপ নিতে ৭ থেকে ১০ দিন সময় লাগে। প্রতি ৩ দিনে ফুলদানি, এয়ারকুলার ও ড্রামের পানি উল্টে দিলে লার্ভা পূর্ণাঙ্গ মশা হতে পারে না।'
                     : 'Aedes larvae require 7 to 10 days to pupate into adult vectors. Evacuating air conditioner trays, flower pots, and plastic drums every 3 days permanently breaks the breeding cycle.'}
                 </p>
               </div>
 
               <div style={{ background: '#f8fafc', padding: '14px', borderRadius: '10px', border: '1px solid var(--border)' }}>
                 <strong style={{ fontSize: '0.88rem', color: '#1e293b' }}>
-                  {isBengali ? 'পাত্রের ভেতরের দেয়াল ঘষে পরিষ্কার করুন' : 'Scrub Inner Walls of Containers'}
+                  {isBengali ? 'পাত্রের ভেতরের দেয়াল ঘষে পরিষ্কার করুন' : 'Scrub Inner Walls of Containers'}
                 </strong>
                 <p style={{ margin: '6px 0 0', fontSize: '0.8rem', color: '#475569', lineHeight: 1.5 }}>
                   {isBengali
-                    ? 'শুধু পানি ফেলে দেওয়া যথেষ্ট নয়; এডিসের ডিম পাত্রের ভেতরের শুকনো দেয়ালে মাসের পর মাস বেঁচে থাকতে পারে। ব্রাশ দিয়ে পাত্রের ভেতরের অংশ ঘষে ধুতে হবে।'
+                    ? 'শুধু পানি ফেলে দেওয়া যথেষ্ট নয়; এডিসের ডিম পাত্রের ভেতরের শুকনো দেয়ালে মাসের পর মাস বেঁচে থাকতে পারে। ব্রাশ দিয়ে পাত্রের ভেতরের অংশ ঘষে ধুতে হবে।'
                     : 'Simply pouring water is insufficient; Aedes aegypti eggs can survive desiccation on container walls for up to 6 months. Scrub container edges firmly with a brush.'}
                 </p>
               </div>
             </div>
           )}
 
+          {/* Tab 2: Interactive Checklist */}
+          {activeTab === 'checklist' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f0fdf4', padding: '10px 14px', borderRadius: '8px', border: '1px solid #bbf7d0', fontSize: '0.78rem' }}>
+                <span style={{ color: '#166534', fontWeight: 700 }}>
+                  {isBengali ? `পরিদর্শন সম্পন্ন: ${completedChecks}/${totalChecks} স্থান` : `Safety Audit Score: ${completedChecks}/${totalChecks} Completed`}
+                </span>
+                <span style={{ background: '#16a34a', color: '#fff', padding: '2px 8px', borderRadius: '10px', fontSize: '0.7rem', fontWeight: 800 }}>
+                  {Math.round((completedChecks / totalChecks) * 100)}%
+                </span>
+              </div>
+
+              {[
+                { id: 'rooftop', labelEn: 'Rooftop rainwater conduits & blocked drains', labelBn: 'ছাদের কোনায় জমে থাকা বৃষ্টির পানি ও বন্ধ পাইপ' },
+                { id: 'pots', labelEn: 'Indoor & balcony plant saucers / trays', labelBn: 'বারান্দা ও টবের নিচের জমে থাকা পানি' },
+                { id: 'acTray', labelEn: 'Air conditioner external runoff drain trays', labelBn: 'এসি (AC) ইউনিটের বাইরের ড্রেনেজ ট্রে' },
+                { id: 'refrigerator', labelEn: 'Refrigerator defrost drip pans underneath', labelBn: 'ফ্রিজের পেছনের অতিরিক্ত পানির ট্রে' },
+                { id: 'overheadTank', labelEn: 'Overhead water tank lid securely sealed', labelBn: 'ছাদের পানির ট্যাংকের ঢাকনা পুরোপুরি বন্ধ' }
+              ].map((item) => (
+                <div
+                  key={item.id}
+                  onClick={() => toggleCheck(item.id)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    padding: '10px 12px',
+                    borderRadius: '8px',
+                    background: checklist[item.id] ? '#f8fafc' : '#ffffff',
+                    border: `1px solid ${checklist[item.id] ? '#cbd5e1' : 'var(--border)'}`,
+                    cursor: 'pointer'
+                  }}
+                >
+                  {checklist[item.id] ? (
+                    <CheckSquare size={18} color="#059669" />
+                  ) : (
+                    <Square size={18} color="#94a3b8" />
+                  )}
+                  <span style={{ fontSize: '0.8rem', color: checklist[item.id] ? '#1e293b' : '#64748b', textDecoration: checklist[item.id] ? 'line-through' : 'none' }}>
+                    {isBengali ? item.labelBn : item.labelEn}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Tab 3: Biting Hours */}
           {activeTab === 'biting' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               <div style={{ background: '#fffbeb', padding: '14px', borderRadius: '10px', border: '1px solid #fef3c7' }}>
@@ -126,7 +207,7 @@ export default function AwarenessModal({ isOpen, onClose, isBengali = false }) {
                 </div>
                 <p style={{ margin: '6px 0 0', fontSize: '0.8rem', color: '#451a03', lineHeight: 1.5 }}>
                   {isBengali
-                    ? 'এডিস মশা সাধারণত সকালের দিকে (সূর্যোদয়ের ২ ঘণ্টা পর) এবং বিকেলে (সূর্যাস্তের আগে) সবচেয়ে বেশি সক্রিয় থাকে। এই সময়ে ক্লাসরুম ও মাঠে ফুলহাতা পোশাক পরিধান করুন।'
+                    ? 'এডিস মশা সাধারণত সকালের দিকে (সূর্যোদয়ের ২ ঘণ্টা পর) এবং বিকেলে (সূর্যাস্তের আগে) সবচেয়ে বেশি সক্রিয় থাকে। এই সময়ে ক্লাসরুম ও মাঠে ফুলহাতা পোশাক পরিধান করুন।'
                     : 'Aedes mosquitoes feed aggressively two hours after sunrise and several hours before sunset. Wear long-sleeved clothing during campus walks and sports sessions.'}
                 </p>
               </div>
@@ -134,17 +215,18 @@ export default function AwarenessModal({ isOpen, onClose, isBengali = false }) {
               <div style={{ background: '#f8fafc', padding: '14px', borderRadius: '10px', border: '1px solid var(--border)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#1e293b', fontWeight: 700, fontSize: '0.88rem' }}>
                   <Clock size={16} color="var(--color-primary)" />
-                  {isBengali ? 'ইনডোর ও ছায়াযুক্ত এলাকা' : 'Indoor Artificial Lighting Biting'}
+                  {isBengali ? 'ইনডোর ও ছায়াযুক্ত এলাকা' : 'Indoor Artificial Lighting Biting'}
                 </div>
                 <p style={{ margin: '6px 0 0', fontSize: '0.8rem', color: '#475569', lineHeight: 1.5 }}>
                   {isBengali
-                    ? 'উজ্জ্বল লাইট থাকা অফিস বা হোস্টেল রুমে এডিস মশা রাতেও কামড়াতে পারে। মশারি ও নেট ব্যবহার নিশ্চিত করুন।'
+                    ? 'উজ্জ্বল লাইট থাকা অফিস বা হোস্টেল রুমে এডিস মশা রাতেও কামড়াতে পারে। মশারি ও নেট ব্যবহার নিশ্চিত করুন।'
                     : 'Under artificial lighting in well-lit study rooms or university hostels, biting can continue into evening hours. Use aerosol repellents and window mesh.'}
                 </p>
               </div>
             </div>
           )}
 
+          {/* Tab 4: Biocontrol */}
           {activeTab === 'biocontrol' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               <div style={{ background: '#ecfdf5', padding: '14px', borderRadius: '10px', border: '1px solid #bbf7d0' }}>
@@ -154,7 +236,7 @@ export default function AwarenessModal({ isOpen, onClose, isBengali = false }) {
                 </div>
                 <p style={{ margin: '6px 0 0', fontSize: '0.8rem', color: '#14532d', lineHeight: 1.5 }}>
                   {isBengali
-                    ? 'ক্যাম্পাস লেক, বড় ড্রেন ও স্থায়ী জলাশয়ে গাপ্পি বা তেলাপিয়া মাছ ছাড়লে তারা প্রতিদিন শত শত মশার লার্ভা খেয়ে বংশবৃদ্ধি রোধ করে।'
+                    ? 'ক্যাম্পাস লেক, বড় ড্রেন ও স্থায়ী জলাশয়ে গাপ্পি বা তেলাপিয়া মাছ ছাড়লে তারা প্রতিদিন শত শত মশার লার্ভা খেয়ে বংশবৃদ্ধি রোধ করে।'
                     : 'Releasing Guppy (Poecilia reticulata) fish in ornamental campus lakes and drainage collection ponds consumes thousands of larvae per day without chemical toxicity.'}
                 </p>
               </div>

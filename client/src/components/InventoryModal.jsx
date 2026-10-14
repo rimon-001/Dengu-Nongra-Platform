@@ -1,16 +1,17 @@
 import React, { useState } from 'react';
-import { X, PackageCheck, AlertCircle, Plus, Minus, Droplets, Flame, ShieldAlert, Sparkles } from 'lucide-react';
+import { X, PackageCheck, AlertCircle, Plus, Minus, Droplets, Flame, ShieldAlert, Sparkles, ShoppingCart, Download, Check } from 'lucide-react';
 
 export default function InventoryModal({ isOpen, onClose, reports = [], isBengali = false }) {
   if (!isOpen) return null;
 
   const activeReportsCount = reports.filter(r => r.status === 'reported').length;
+  const resolvedCount = reports.filter(r => r.status === 'resolved').length;
 
   // Local inventory reserves for Ashulia Sector Depot
   const [supplies, setSupplies] = useState([
     {
       id: 'bti-powder',
-      name: isBengali ? 'বিটিআই (Bti) ব্যাকটেরিয়াল লার্ভিসাইড পাউডার' : 'Bti Biological Powder (Bacillus thuringiensis)',
+      name: isBengali ? 'বিটিআই (Bti) ব্যাকটেরিয়াল লার্ভিসাইড পাউডার' : 'Bti Biological Powder (Bacillus thuringiensis)',
       type: 'Biological',
       stock: 48,
       unit: 'kg',
@@ -18,7 +19,7 @@ export default function InventoryModal({ isOpen, onClose, reports = [], isBengal
       icon: Droplets,
       color: '#059669',
       bgColor: '#ecfdf5',
-      safetyNote: isBengali ? 'পরিবেশবান্ধব ও অ-বিষাক্ত' : 'Non-toxic to fish & fauna'
+      safetyNote: isBengali ? 'পরিবেশবান্ধব ও জলজ প্রাণীর জন্য নিরাপদ' : 'Non-toxic to fish & non-target aquatic fauna'
     },
     {
       id: 'temephos-granules',
@@ -30,7 +31,7 @@ export default function InventoryModal({ isOpen, onClose, reports = [], isBengal
       icon: ShieldAlert,
       color: '#dc2626',
       bgColor: '#fef2f2',
-      safetyNote: isBengali ? 'শুধুমাত্র আবদ্ধ নর্দমার জন্য' : 'Restricted to unpotable drains'
+      safetyNote: isBengali ? 'শুধুমাত্র আবদ্ধ নর্দমার জন্য অনুমোদিত' : 'Restricted strictly to unpotable stagnant storm drains'
     },
     {
       id: 'fogger-fuel',
@@ -42,11 +43,11 @@ export default function InventoryModal({ isOpen, onClose, reports = [], isBengal
       icon: Flame,
       color: '#d97706',
       bgColor: '#fffbeb',
-      safetyNote: isBengali ? 'সন্ধ্যার স্প্রে কার্যক্রমের জন্য' : 'Evening adult mosquito knock-down'
+      safetyNote: isBengali ? 'সান্ধ্যকালীন প্রাপ্তবয়স্ক এডিস মশা নিধন' : 'Evening adult mosquito knockdown formulation'
     },
     {
       id: 'ppe-gloves',
-      name: isBengali ? 'ফিল্ড ভলান্টিয়ার ওয়াটারপ্রুফ গ্লাভস ও কিট' : 'Field Squad Safety Gloves & Boots',
+      name: isBengali ? 'ফিল্ড ভলান্টিয়ার ওয়াটারপ্রুফ গ্লাভস ও কিট' : 'Field Squad Safety Gloves & Boots',
       type: 'Equipment',
       stock: 22,
       unit: 'Sets',
@@ -54,7 +55,7 @@ export default function InventoryModal({ isOpen, onClose, reports = [], isBengal
       icon: PackageCheck,
       color: '#2563eb',
       bgColor: '#eff6ff',
-      safetyNote: isBengali ? 'স্বেচ্ছাসেবক সুরক্ষা' : 'Field volunteer gear'
+      safetyNote: isBengali ? 'স্বেচ্ছাসেবকদের ব্যক্তিগত সুরক্ষা সরঞ্জাম' : 'Field volunteer personal protective equipment'
     }
   ]);
 
@@ -67,32 +68,80 @@ export default function InventoryModal({ isOpen, onClose, reports = [], isBengal
     }));
   };
 
+  const handleExportRequisition = () => {
+    const requisitionData = [
+      ['Supply ID', 'Item Name', 'Category', 'Current Stock', 'Recommended Reorder'],
+      ...supplies.map(s => [
+        s.id,
+        `"${s.name}"`,
+        s.type,
+        `${s.stock} ${s.unit}`,
+        s.stock <= 20 ? `Urgent Restock (+50 ${s.unit})` : 'Adequate'
+      ])
+    ];
+
+    const csvContent = '\uFEFF' + requisitionData.map(e => e.join(',')).join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `nongra-larvicide-requisition-${Date.now()}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const totalDemandBti = (activeReportsCount * 1.5).toFixed(1);
+
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '620px', maxHeight: '90vh', overflowY: 'auto' }}>
+      <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '640px', maxHeight: '90vh', overflowY: 'auto' }}>
         <button className="modal-close" onClick={onClose}>
           <X size={18} color="#64748b" />
         </button>
 
         <div style={{ padding: '24px' }}>
           {/* Header */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-            <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: '#ecfdf5', color: '#059669', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <PackageCheck size={20} />
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px', flexWrap: 'wrap', gap: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: '#ecfdf5', color: '#059669', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <PackageCheck size={20} />
+              </div>
+              <div>
+                <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800 }}>
+                  {isBengali ? 'লার্ভিসাইড ও কীটনাশক ইনভেন্টরি' : 'Larvicide & Chemical Stock Ledger'}
+                </h2>
+                <span style={{ fontSize: '0.72rem', color: '#059669', fontWeight: 700, textTransform: 'uppercase' }}>
+                  {isBengali ? 'আশুলিয়া ও ক্যাম্পাস স্টোরেজ ডিপো' : 'Ashulia / DIU Field Response Depot'}
+                </span>
+              </div>
             </div>
-            <div>
-              <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800 }}>
-                {isBengali ? 'লার্ভিসাইড ও কীটনাশক ইনভেন্টরি' : 'Larvicide & Chemical Stock Ledger'}
-              </h2>
-              <span style={{ fontSize: '0.72rem', color: '#059669', fontWeight: 700, textTransform: 'uppercase' }}>
-                {isBengali ? 'আশুলিয়া ও ক্যাম্পাস স্টোরেজ ডিপো' : 'Ashulia / DIU Field Response Depot'}
-              </span>
-            </div>
+
+            <button
+              type="button"
+              onClick={handleExportRequisition}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '5px',
+                padding: '6px 12px',
+                borderRadius: '6px',
+                border: '1px solid var(--border)',
+                background: '#ffffff',
+                color: '#334155',
+                fontSize: '0.74rem',
+                fontWeight: 700,
+                cursor: 'pointer'
+              }}
+            >
+              <Download size={13} /> {isBengali ? 'অর্ডার রিকুইজিশন' : 'Requisition CSV'}
+            </button>
           </div>
 
-          <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', margin: '0 0 18px', lineHeight: 1.5 }}>
+          <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', margin: '0 0 16px', lineHeight: 1.5 }}>
             {isBengali
-              ? 'বর্তমানে চিহ্নিত হটস্পটগুলোর চিকিৎসায় পর্যাপ্ত বিটিআই লার্ভিসাইড ও ফগিং স্প্রে মজুত রয়েছে কিনা তা লাইভ পর্যবেক্ষণ করুন।'
+              ? 'বর্তমানে চিহ্নিত হটস্পটগুলোর চিকিৎসায় পর্যাপ্ত বিটিআই লার্ভিসাইড ও ফগিং স্প্রে মজুত রয়েছে কিনা তা লাইভ পর্যবেক্ষণ করুন।'
               : 'Real-time supply forecasting calculating material burn rates for biological Bti, chemical larvicides, and adult fogging fuel.'}
           </p>
 
@@ -102,7 +151,7 @@ export default function InventoryModal({ isOpen, onClose, reports = [], isBengal
             border: '1px solid var(--border)',
             borderRadius: '12px',
             padding: '14px 16px',
-            marginBottom: '20px',
+            marginBottom: '18px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
@@ -111,10 +160,10 @@ export default function InventoryModal({ isOpen, onClose, reports = [], isBengal
           }}>
             <div>
               <div style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-main)' }}>
-                {isBengali ? 'প্রয়োজনীয় মজুত পূর্বাভাস' : 'Demand Forecast for Active Hotspots'}
+                {isBengali ? 'প্রয়োজনীয় মজুত পূর্বাভাস' : 'Demand Forecast for Active Hotspots'}
               </div>
               <div style={{ fontSize: '0.74rem', color: '#64748b', marginTop: '2px' }}>
-                {activeReportsCount} {isBengali ? 'টি সক্রিয় স্থানের জন্য আনুমানিক' : 'unresolved breeding sites need approx.'} <strong>{(activeReportsCount * 1.5).toFixed(1)} kg Bti</strong>
+                {activeReportsCount} {isBengali ? 'টি সক্রিয় স্থানের জন্য আনুমানিক' : 'unresolved breeding sites need approx.'} <strong>{totalDemandBti} kg Bti</strong>
               </div>
             </div>
 
@@ -126,7 +175,7 @@ export default function InventoryModal({ isOpen, onClose, reports = [], isBengal
               background: '#dcfce7',
               color: '#15803d'
             }}>
-              ✓ {isBengali ? 'পর্যাপ্ত মজুত রয়েছে' : 'Reserves Sufficient'}
+              ✓ {isBengali ? 'পর্যাপ্ত মজুত রয়েছে' : 'Reserves Sufficient'}
             </span>
           </div>
 
@@ -174,7 +223,7 @@ export default function InventoryModal({ isOpen, onClose, reports = [], isBengal
                         </span>
                       </div>
                       <div style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '2px' }}>
-                        {item.safetyNote} • ~{item.requiredPerSite} {item.unit} {isBengali ? 'প্রতি স্পটে' : '/ site'}
+                        {item.safetyNote} • {item.requiredPerSite} {item.unit} {isBengali ? 'প্রতি স্পটে' : '/ site'}
                       </div>
                     </div>
                   </div>
@@ -249,7 +298,7 @@ export default function InventoryModal({ isOpen, onClose, reports = [], isBengal
             <Sparkles size={16} flexShrink={0} />
             <span>
               {isBengali
-                ? 'ডিজিএইচএস (DGHS) এর অনুমোদিত বিশ্ব স্বাস্থ্য সংস্থা (WHO) ভেক্টর কন্ট্রোল স্ট্যান্ডার্ড অনুসরণ করে সরবরাহ তালিকা সংরক্ষণ করা হয়।'
+                ? 'ডিজিএইচএস (DGHS) এর অনুমোদিত বিশ্ব স্বাস্থ্য সংস্থা (WHO) ভেক্টর কন্ট্রোল স্ট্যান্ডার্ড অনুসরণ করে সরবরাহ তালিকা সংরক্ষণ করা হয়।'
                 : 'Formulations strictly adhere to WHO Pesticide Evaluation Scheme (WHOPES) standards for campus and residential vector control.'}
             </span>
           </div>

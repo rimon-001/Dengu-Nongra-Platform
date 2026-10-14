@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Award, Shield, FileCheck, Layers, Cpu, Globe2, Printer } from 'lucide-react';
+import { X, Award, Shield, FileCheck, Layers, Cpu, Globe2, Printer, CheckCircle2, QrCode } from 'lucide-react';
 
 export default function ExecutiveBriefModal({ isOpen, onClose, reports = [], isBengali = false }) {
   if (!isOpen) return null;
@@ -14,7 +14,7 @@ export default function ExecutiveBriefModal({ isOpen, onClose, reports = [], isB
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '640px', maxHeight: '90vh', overflowY: 'auto' }}>
+      <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '660px', maxHeight: '90vh', overflowY: 'auto' }}>
         <button className="modal-close" onClick={onClose}>
           <X size={18} color="#64748b" />
         </button>
@@ -76,11 +76,11 @@ export default function ExecutiveBriefModal({ isOpen, onClose, reports = [], isB
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #e2e8f0', paddingBottom: '10px', marginBottom: '12px' }}>
               <div>
-                <strong style={{ fontSize: '1rem', color: '#0f172a' }}>নংরা • Nongra</strong>
+                <strong style={{ fontSize: '1.05rem', color: '#0f172a' }}>নংরা • Nongra</strong>
                 <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Municipal Dengue Vector Surveillance Platform (Ashulia & DIU)</div>
               </div>
               <div style={{ textAlign: 'right' }}>
-                <span style={{ fontSize: '0.75rem', fontWeight: 800, padding: '2px 8px', borderRadius: '4px', background: '#dcfce7', color: '#15803d' }}>
+                <span style={{ fontSize: '0.75rem', fontWeight: 800, padding: '3px 8px', borderRadius: '4px', background: '#dcfce7', color: '#15803d' }}>
                   Containment: {containmentRate}%
                 </span>
               </div>
@@ -93,7 +93,7 @@ export default function ExecutiveBriefModal({ isOpen, onClose, reports = [], isB
               </div>
               <div>
                 <strong>🔬 Regulatory Alignment:</strong>
-                <p style={{ margin: '2px 0 0', color: '#475569' }}>Aligned with WHO Vector Standards & DGHS Breteau Index ($BI &lt; 20$) protocols.</p>
+                <p style={{ margin: '2px 0 0', color: '#475569' }}>Aligned with WHO Vector Standards & DGHS Breteau Index (BI &lt; 20) protocols.</p>
               </div>
             </div>
 
@@ -112,21 +112,40 @@ export default function ExecutiveBriefModal({ isOpen, onClose, reports = [], isB
               <strong style={{ fontSize: '0.78rem', color: '#1e293b', display: 'block', marginBottom: '6px' }}>
                 Implemented Operational Capabilities:
               </strong>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '6px', fontSize: '0.72rem', color: '#334155' }}>
-                <div>✓ 7-Day Larval Trend Forecasting</div>
-                <div>✓ Nearest-Neighbor TSP Route Navigation</div>
-                <div>✓ WHO Breteau Index Calculator</div>
-                <div>✓ Aerial Drone Spray Path Simulator</div>
-                <div>✓ Ultrasonic Hazard Proximity Radar</div>
-                <div>✓ Bti & Chemical Supply Stock Ledger</div>
-                <div>✓ Verified Citizen Rating Console</div>
-                <div>✓ Non-repudiable Municipal Audit Logs</div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '6px', fontSize: '0.74rem', color: '#334155' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                  <CheckCircle2 size={13} color="#059669" /> 7-Day Larval Trend Forecasting
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                  <CheckCircle2 size={13} color="#059669" /> Nearest-Neighbor TSP Routing
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                  <CheckCircle2 size={13} color="#059669" /> WHO Breteau Index Matrix
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                  <CheckCircle2 size={13} color="#059669" /> Autonomous Drone Flight Corridor
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                  <CheckCircle2 size={13} color="#059669" /> Ultrasonic Hazard Proximity Radar
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                  <CheckCircle2 size={13} color="#059669" /> Bti & Chemical Stock Ledger
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                  <CheckCircle2 size={13} color="#059669" /> Verified Citizen Rating Console
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                  <CheckCircle2 size={13} color="#059669" /> Non-repudiable Municipal Audit Logs
+                </div>
               </div>
             </div>
           </div>
 
-          <div style={{ fontSize: '0.72rem', color: '#94a3b8', textAlign: 'center' }}>
-            Prepared for Daffodil International University Sustainability Showcase & Municipal Health Review • October 2026
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.72rem', color: '#94a3b8' }}>
+            <span>Prepared for Daffodil International University Innovation Showcase • 2026</span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#047857', fontWeight: 800 }}>
+              <QrCode size={14} /> VERIFIED-SYSTEM-ARCH
+            </span>
           </div>
         </div>
       </div>

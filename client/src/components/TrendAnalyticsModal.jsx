@@ -1,8 +1,10 @@
-import React from 'react';
-import { X, TrendingDown, TrendingUp, AlertTriangle, Calendar, ShieldCheck, Activity } from 'lucide-react';
+import React, { useState } from 'react';
+import { X, TrendingDown, TrendingUp, AlertTriangle, Calendar, ShieldCheck, Activity, Download } from 'lucide-react';
 
 export default function TrendAnalyticsModal({ isOpen, onClose, reports = [], isBengali = false }) {
   if (!isOpen) return null;
+
+  const [hoveredDay, setHoveredDay] = useState(null);
 
   const resolvedCount = reports.filter(r => r.status === 'resolved').length;
   const activeCount = reports.filter(r => r.status === 'reported').length;
@@ -22,31 +24,71 @@ export default function TrendAnalyticsModal({ isOpen, onClose, reports = [], isB
   const maxVal = Math.max(...weeklyData.map(d => Math.max(d.reported, d.resolved)), 10);
   const chartHeight = 140;
 
+  const handleExportChartData = () => {
+    const csvContent = '\uFEFF' + [
+      ['Day', 'Reported Hazards', 'Resolved Sites'],
+      ...weeklyData.map(d => [d.day, d.reported, d.resolved])
+    ].map(e => e.join(',')).join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `nongra-weekly-trend-${Date.now()}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '580px', maxHeight: '90vh', overflowY: 'auto' }}>
+      <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '600px', maxHeight: '90vh', overflowY: 'auto' }}>
         <button className="modal-close" onClick={onClose}>
           <X size={18} color="#64748b" />
         </button>
 
         <div style={{ padding: '24px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-            <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: '#eff6ff', color: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Activity size={20} />
+          {/* Header */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px', flexWrap: 'wrap', gap: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: '#eff6ff', color: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Activity size={20} />
+              </div>
+              <div>
+                <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800 }}>
+                  {isBengali ? '৭ দিনের ভেক্টর প্রাদুর্ভাব ও ঝুঁকি প্রবণতা' : '7-Day Vector Outbreak & Risk Trend'}
+                </h2>
+                <span style={{ fontSize: '0.72rem', color: '#2563eb', fontWeight: 700, textTransform: 'uppercase' }}>
+                  {isBengali ? 'পরিসংখ্যান ও প্রতিরোধ বিশ্লেষণ' : 'Epidemiological Larval Surveillance'}
+                </span>
+              </div>
             </div>
-            <div>
-              <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800 }}>
-                {isBengali ? '৭ দিনের ভেক্টর প্রাদুর্ভাব ও ঝুঁকি প্রবণতা' : '7-Day Vector Outbreak & Risk Trend'}
-              </h2>
-              <span style={{ fontSize: '0.72rem', color: '#2563eb', fontWeight: 700, textTransform: 'uppercase' }}>
-                {isBengali ? 'পরিসংখ্যান ও প্রতিরোধ বিশ্লেষণ' : 'Epidemiological Larval Surveillance'}
-              </span>
-            </div>
+
+            <button
+              type="button"
+              onClick={handleExportChartData}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px',
+                padding: '5px 10px',
+                borderRadius: '6px',
+                border: '1px solid var(--border)',
+                background: '#ffffff',
+                color: '#334155',
+                fontSize: '0.74rem',
+                fontWeight: 700,
+                cursor: 'pointer'
+              }}
+            >
+              <Download size={13} /> CSV
+            </button>
           </div>
 
-          <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', margin: '0 0 20px', lineHeight: 1.5 }}>
+          <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', margin: '0 0 18px', lineHeight: 1.5 }}>
             {isBengali
-              ? 'দৈনিক নতুন শনাক্ত জমা পানি বনাম স্বেচ্ছাসেবকদের লার্ভিসাইড প্রয়োগের তুলনামূলক হার।'
+              ? 'দৈনিক নতুন শনাক্ত জমা পানি বনাম স্বেচ্ছাসেবকদের লার্ভিসাইড প্রয়োগের তুলনামূলক হার।'
               : 'Comparing newly mapped stagnant breeding pools against confirmed volunteer eradication efforts across the DIU Smart Campus & Ashulia zones.'}
           </p>
 
@@ -54,7 +96,7 @@ export default function TrendAnalyticsModal({ isOpen, onClose, reports = [], isB
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', marginBottom: '22px' }}>
             <div style={{ background: '#f8fafc', border: '1px solid var(--border)', borderRadius: '10px', padding: '12px' }}>
               <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 600 }}>{isBengali ? 'নির্মূলের হার' : 'Containment Rate'}</div>
-              <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#16a34a', marginTop: '2px' }}>
+              <div style={{ fontSize: '1.35rem', fontWeight: 800, color: '#16a34a', marginTop: '2px' }}>
                 {Math.round((resolvedCount / Math.max(1, reports.length)) * 100)}%
               </div>
               <div style={{ fontSize: '0.7rem', color: '#16a34a', display: 'flex', alignItems: 'center', gap: '3px', marginTop: '2px' }}>
@@ -63,8 +105,8 @@ export default function TrendAnalyticsModal({ isOpen, onClose, reports = [], isB
             </div>
 
             <div style={{ background: '#f8fafc', border: '1px solid var(--border)', borderRadius: '10px', padding: '12px' }}>
-              <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 600 }}>{isBengali ? 'গড় সমাধান সময়' : 'Avg Triage Time'}</div>
-              <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#0f766e', marginTop: '2px' }}>
+              <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 600 }}>{isBengali ? 'গড় সমাধান সময়' : 'Avg Triage Time'}</div>
+              <div style={{ fontSize: '1.35rem', fontWeight: 800, color: '#0f766e', marginTop: '2px' }}>
                 4.2 hrs
               </div>
               <div style={{ fontSize: '0.7rem', color: '#0f766e', display: 'flex', alignItems: 'center', gap: '3px', marginTop: '2px' }}>
@@ -74,7 +116,7 @@ export default function TrendAnalyticsModal({ isOpen, onClose, reports = [], isB
 
             <div style={{ background: '#f8fafc', border: '1px solid var(--border)', borderRadius: '10px', padding: '12px' }}>
               <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 600 }}>{isBengali ? '৭ দিনের ঝুঁকি স্তর' : 'Next 7-Day Risk'}</div>
-              <div style={{ fontSize: '1.3rem', fontWeight: 800, color: activeCount >= 2 ? '#dc2626' : '#16a34a', marginTop: '2px' }}>
+              <div style={{ fontSize: '1.35rem', fontWeight: 800, color: activeCount >= 2 ? '#dc2626' : '#16a34a', marginTop: '2px' }}>
                 {activeCount >= 2 ? 'MODERATE' : 'CONTROLLED'}
               </div>
               <div style={{ fontSize: '0.7rem', color: '#64748b', marginTop: '2px' }}>
@@ -83,7 +125,7 @@ export default function TrendAnalyticsModal({ isOpen, onClose, reports = [], isB
             </div>
           </div>
 
-          {/* SVG Comparative Bar Chart */}
+          {/* Interactive SVG Comparative Bar Chart */}
           <div style={{ background: '#ffffff', border: '1px solid var(--border)', borderRadius: '12px', padding: '18px 14px', marginBottom: '20px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <span style={{ fontSize: '0.85rem', fontWeight: 700 }}>
@@ -99,19 +141,42 @@ export default function TrendAnalyticsModal({ isOpen, onClose, reports = [], isB
               </div>
             </div>
 
-            {/* Custom SVG Visualization */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', height: `${chartHeight}px`, padding: '0 8px', borderBottom: '1px solid #e2e8f0' }}>
+            {/* SVG Bars with hover inspection tooltips */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', height: `${chartHeight}px`, padding: '0 8px', borderBottom: '1px solid #e2e8f0', position: 'relative' }}>
               {weeklyData.map((d, i) => {
                 const repHeight = (d.reported / maxVal) * (chartHeight - 20);
                 const resHeight = (d.resolved / maxVal) * (chartHeight - 20);
+                const isHovered = hoveredDay === i;
 
                 return (
-                  <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
+                  <div 
+                    key={i} 
+                    onMouseEnter={() => setHoveredDay(i)}
+                    onMouseLeave={() => setHoveredDay(null)}
+                    style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', cursor: 'pointer', position: 'relative' }}
+                  >
+                    {isHovered && (
+                      <div style={{
+                        position: 'absolute',
+                        top: '-32px',
+                        background: '#0f172a',
+                        color: '#fff',
+                        padding: '3px 7px',
+                        borderRadius: '4px',
+                        fontSize: '0.68rem',
+                        whiteSpace: 'nowrap',
+                        zIndex: 10
+                      }}>
+                        🔴 {d.reported} | 🟢 {d.resolved}
+                      </div>
+                    )}
                     <div style={{ display: 'flex', alignItems: 'flex-end', gap: '4px' }}>
-                      <div style={{ width: '14px', height: `${Math.max(4, repHeight)}px`, background: '#fca5a5', borderRadius: '3px 3px 0 0' }} title={`Reported: ${d.reported}`}></div>
-                      <div style={{ width: '14px', height: `${Math.max(4, resHeight)}px`, background: '#86efac', borderRadius: '3px 3px 0 0' }} title={`Resolved: ${d.resolved}`}></div>
+                      <div style={{ width: '14px', height: `${Math.max(4, repHeight)}px`, background: '#fca5a5', borderRadius: '3px 3px 0 0' }} />
+                      <div style={{ width: '14px', height: `${Math.max(4, resHeight)}px`, background: '#86efac', borderRadius: '3px 3px 0 0' }} />
                     </div>
-                    <span style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 600 }}>{d.day}</span>
+                    <span style={{ fontSize: '0.72rem', color: isHovered ? '#0f172a' : '#64748b', fontWeight: isHovered ? 800 : 600 }}>
+                      {d.day}
+                    </span>
                   </div>
                 );
               })}
@@ -123,7 +188,7 @@ export default function TrendAnalyticsModal({ isOpen, onClose, reports = [], isB
             <ShieldCheck size={20} flexShrink={0} />
             <span>
               {isBengali
-                ? 'স্বেচ্ছাসেবক দলের দ্রুত হস্তক্ষেপে গত ৭২ ঘণ্টায় লার্ভা প্রজনন হার শতকরা ৬২ ভাগ হ্রাস পেয়েছে।'
+                ? 'স্বেচ্ছাসেবক দলের দ্রুত হস্তক্ষেপে গত ৭২ ঘণ্টায় লার্ভা প্রজনন হার শতকরা ৬২ ভাগ হ্রাস পেয়েছে।'
                 : 'Accelerated volunteer sweeps have suppressed predicted pupal emergence by 62% across the surveyed sector.'}
             </span>
           </div>

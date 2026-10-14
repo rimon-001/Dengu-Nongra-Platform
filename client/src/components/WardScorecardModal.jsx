@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Building2, ShieldCheck, AlertOctagon, CheckCircle2, MapPin, Award } from 'lucide-react';
+import { X, Building2, ShieldCheck, AlertOctagon, CheckCircle2, MapPin, Award, Printer, Clock } from 'lucide-react';
 
 export default function WardScorecardModal({ isOpen, onClose, reports = [], isBengali = false }) {
   if (!isOpen) return null;
@@ -10,19 +10,22 @@ export default function WardScorecardModal({ isOpen, onClose, reports = [], isBe
       id: 'W-01',
       name: isBengali ? 'ওয়ার্ড ০১: আশুলিয়া মডেল টাউন ও পরিবহন টার্মিনাল' : 'Ward 01: Ashulia Model Town & Transport Bay',
       keywords: ['transport', 'terminal', 'drain', 'puddle'],
-      inspector: 'Squad A (Lead: Tanvir H.)'
+      inspector: 'Squad Alpha (Lead: Tanvir H.)',
+      slaHours: '16h Avg'
     },
     {
       id: 'W-02',
       name: isBengali ? 'ওয়ার্ড ০২: ডিআইইউ স্মার্ট ক্যাম্পাস ও ক্যাফেটেরিয়া লেক' : 'Ward 02: DIU Smart Campus & Cafeteria Lake',
       keywords: ['cafeteria', 'gate', 'lake', 'block'],
-      inspector: 'DIU Eco Club Unit'
+      inspector: 'DIU Eco Taskforce Unit',
+      slaHours: '8h Avg'
     },
     {
       id: 'W-03',
       name: isBengali ? 'ওয়ার্ড ০৩: বহুতল নির্মাণ এলাকা ও আবাসিক ছাদ' : 'Ward 03: Rooftops, Hostels & Construction Yards',
       keywords: ['tank', 'rooftop', 'construction', 'plastic', 'tire'],
-      inspector: 'Green Ashulia Rapid Squad'
+      inspector: 'Green Ashulia Rapid Squad',
+      slaHours: '22h Avg'
     }
   ];
 
@@ -66,32 +69,58 @@ export default function WardScorecardModal({ isOpen, onClose, reports = [], isBe
     };
   });
 
+  const handlePrintWorkOrder = () => {
+    window.print();
+  };
+
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '620px', maxHeight: '90vh', overflowY: 'auto' }}>
+      <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '640px', maxHeight: '90vh', overflowY: 'auto' }}>
         <button className="modal-close" onClick={onClose}>
           <X size={18} color="#64748b" />
         </button>
 
         <div style={{ padding: '24px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-            <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: '#ecfdf5', color: '#059669', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Building2 size={20} />
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: '#ecfdf5', color: '#059669', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Building2 size={20} />
+              </div>
+              <div>
+                <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800 }}>
+                  {isBengali ? 'পৌরসভা ওয়ার্ড ডেঙ্গু প্রতিরোধ স্কোরকার্ড' : 'Municipal Ward Dengue Scorecard'}
+                </h2>
+                <span style={{ fontSize: '0.72rem', color: '#059669', fontWeight: 700, textTransform: 'uppercase' }}>
+                  {isBengali ? 'ওয়ার্ডভিত্তিক ঝুঁকি মূল্যায়ন ও এসএলএ ট্র্যাকিং' : 'Sector-Wise Hazard Audit & SLA Compliance'}
+                </span>
+              </div>
             </div>
-            <div>
-              <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800 }}>
-                {isBengali ? 'পৌরসভা ওয়ার্ড ডেঙ্গু প্রতিরোধ স্কোরকার্ড' : 'Municipal Ward Dengue Scorecard'}
-              </h2>
-              <span style={{ fontSize: '0.72rem', color: '#059669', fontWeight: 700, textTransform: 'uppercase' }}>
-                {isBengali ? 'এলাকাভিত্তিক ঝুঁকি মূল্যায়ন ও পরিচ্ছন্নতা গ্রেডিং' : 'Sector-Wise Hazard Audit & Cleanliness Rating'}
-              </span>
-            </div>
+
+            <button
+              type="button"
+              onClick={handlePrintWorkOrder}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px',
+                padding: '5px 10px',
+                borderRadius: '6px',
+                border: '1px solid var(--border)',
+                background: '#ffffff',
+                color: '#334155',
+                fontSize: '0.74rem',
+                fontWeight: 700,
+                cursor: 'pointer'
+              }}
+            >
+              <Printer size={13} /> {isBengali ? 'প্রিন্ট ওয়ার্ক অর্ডার' : 'Print Order'}
+            </button>
           </div>
 
-          <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', margin: '0 0 20px', lineHeight: 1.5 }}>
+          <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', margin: '0 0 18px', lineHeight: 1.5 }}>
             {isBengali
-              ? 'আশুলিয়া ও বিশ্ববিদ্যালয় এলাকার বিভিন্ন ওয়ার্ডের সক্রিয় লার্ভা প্রজননস্থল এবং সমাধানের হারের ভিত্তিতে সাপ্তাহিক ঝুঁকি মূল্যায়ন।'
-              : 'Weekly comparative surveillance rating calculated for local administrative zones based on breeding site density and rapid response times.'}
+              ? 'আশুলিয়া ও বিশ্ববিদ্যালয় এলাকার বিভিন্ন ওয়ার্ডের সক্রিয় লার্ভা প্রজননস্থল এবং ৪৮-ঘন্টার এসএলএ সমাধানের হারের ভিত্তিতে ঝুঁকি মূল্যায়ন।'
+              : 'Weekly comparative surveillance rating calculated for municipal administrative zones based on breeding site clearance and 48-hour SLA compliance.'}
           </p>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '22px' }}>
@@ -114,8 +143,12 @@ export default function WardScorecardModal({ isOpen, onClose, reports = [], isBe
                       </span>
                       <strong style={{ fontSize: '0.9rem', color: 'var(--text-main)' }}>{ward.name}</strong>
                     </div>
-                    <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '3px' }}>
-                      {isBengali ? 'দায়িত্বপ্রাপ্ত ইউনিট:' : 'Assigned Squad:'} {ward.inspector}
+                    <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '3px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span>{isBengali ? 'দায়িত্বপ্রাপ্ত ইউনিট:' : 'Assigned Squad:'} <strong>{ward.inspector}</strong></span>
+                      <span>•</span>
+                      <span style={{ color: '#047857', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '2px' }}>
+                        <Clock size={11} /> {ward.slaHours}
+                      </span>
                     </div>
                   </div>
 
@@ -156,8 +189,8 @@ export default function WardScorecardModal({ isOpen, onClose, reports = [], isBe
             <Award size={18} color="#0f766e" flexShrink={0} />
             <span>
               {isBengali
-                ? 'যে ওয়ার্ডের রেটিং "A+ (Safe)" বজায় থাকবে, সেই ওয়ার্ডের ভলান্টিয়ার টিমকে সিটি কর্পোরেশন স্টার ব্যাজ প্রদান করা হবে।'
-                : 'Wards maintaining an "A+ (Safe)" rating for two consecutive weeks qualify for the City Health Taskforce Civic Excellence Grant.'}
+                ? 'যে ওয়ার্ডের রেটিং "A+ (Safe)" বজায় থাকবে এবং এসএলএ ২৪ ঘন্টার নিচে থাকবে, সেই ওয়ার্ডের স্কোয়াডকে স্বাস্থ্য অধিদপ্তর সম্মাননা ব্যাজ প্রদান করা হবে।'
+                : 'Wards maintaining an "A+ (Safe)" rating with sub-24h response times qualify for the City Health Taskforce Civic Excellence Grant.'}
             </span>
           </div>
         </div>

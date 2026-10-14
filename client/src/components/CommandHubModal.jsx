@@ -3,7 +3,8 @@ import {
   X, Search, Navigation, Route, Radar, PlaneTakeoff, 
   Calculator, CloudRain, PackageCheck, ClipboardCheck, 
   ShieldCheck, Building2, Presentation, Star, BookOpen, 
-  HeartPulse, Radio, FileText, BarChart3, RefreshCw, Zap, Play
+  HeartPulse, Radio, FileText, BarChart3, RefreshCw, Zap, Play, 
+  CheckCircle2, Clock, AlertTriangle, Filter, Award
 } from 'lucide-react';
 
 export default function CommandHubModal({
@@ -16,10 +17,11 @@ export default function CommandHubModal({
   if (!isOpen) return null;
 
   const [query, setQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('all');
 
   const tools = [
     // Field Ops
-    { id: 'triage', category: 'field', label: isBengali ? 'স্প্রে ট্রায়াজ' : 'Spray Triage Queue', desc: 'Prioritize unverified breeding pools', icon: Navigation, color: '#dc2626', bg: '#fef2f2' },
+    { id: 'triage', category: 'field', label: isBengali ? 'স্প্রে ট্রায়াজ' : 'Spray Triage Queue', desc: 'Prioritize unverified breeding pools', icon: Navigation, color: '#dc2626', bg: '#fef2f2' },
     { id: 'route', category: 'field', label: isBengali ? 'ভলান্টিয়ার রুট' : 'Patrol Route Optimizer', desc: 'Shortest-path turn-by-turn navigation', icon: Route, color: '#047857', bg: '#ecfdf5' },
     { id: 'radar', category: 'field', label: isBengali ? 'প্রক্সিমিটি রেডার' : 'Threat Proximity Radar', desc: 'Ultrasonic hazard warning bubble', icon: Radar, color: '#1d4ed8', bg: '#dbeafe' },
     { id: 'sync', category: 'field', label: isBengali ? 'অফলাইন সিঙ্ক' : 'Offline Buffer Sync', desc: 'WAL SQLite packet sync status', icon: RefreshCw, color: '#475569', bg: '#f1f5f9' },
@@ -32,24 +34,27 @@ export default function CommandHubModal({
     { id: 'inventory', category: 'science', label: isBengali ? 'কীটনাশক মজুত' : 'Larvicide Stock Ledger', desc: 'Bti and fogging fuel reserve ledger', icon: PackageCheck, color: '#065f46', bg: '#ecfdf5' },
 
     // Governance & Compliance
-    { id: 'audit', category: 'gov', label: isBengali ? 'অডিট লগ' : 'Municipal Audit Trail', desc: 'Non-repudiable transaction log', icon: ClipboardCheck, color: '#334155', bg: '#f8fafc' },
-    { id: 'clearance', category: 'gov', label: isBengali ? 'ছাড়পত্র সনদ' : 'Clearance Certificate', desc: 'Official DGHS sanitation certificate', icon: ShieldCheck, color: '#059669', bg: '#ecfdf5' },
     { id: 'ward', category: 'gov', label: isBengali ? 'ওয়ার্ড স্কোরকার্ড' : 'Ward Safety Scorecard', desc: 'Sector-wise A/B/C safety grades', icon: Building2, color: '#15803d', bg: '#f0fdf4' },
+    { id: 'audit', category: 'gov', label: isBengali ? 'অডিট লগ' : 'Municipal Audit Trail', desc: 'Non-repudiable transaction log', icon: ClipboardCheck, color: '#334155', bg: '#f8fafc' },
+    { id: 'clearance', category: 'gov', label: isBengali ? 'ছাড়পত্র সনদ' : 'Clearance Certificate', desc: 'Official DGHS sanitation certificate', icon: ShieldCheck, color: '#059669', bg: '#ecfdf5' },
     { id: 'brief', category: 'gov', label: isBengali ? 'সারসংক্ষেপ কার্ড' : 'Executive Jury Brief', desc: 'One-page print architecture summary', icon: Presentation, color: '#047857', bg: '#ecfdf5' },
     { id: 'deck', category: 'gov', label: isBengali ? 'পিচ ডেক' : 'Pitch Deck Presentation', desc: 'Competition presentation slides', icon: Presentation, color: '#3730a3', bg: '#e0e7ff' },
     { id: 'manifest', category: 'gov', label: isBengali ? 'ডিসপ্যাচ ম্যানিফেস্ট' : 'Dispatch Manifest', desc: 'Printable team field manifest', icon: FileText, color: '#0f766e', bg: '#f0fdfa' },
 
     // Public Health & Community
+    { id: 'quiz', category: 'community', label: isBengali ? 'ডেঙ্গু কুইজ ও জ্ঞানকোষ' : 'Prize Quiz & Knowledge Hub', desc: 'Earn points and Gold/Silver profile badges', icon: Award, color: '#16a34a', bg: '#f0fdf4' },
     { id: 'rating', category: 'community', label: isBengali ? 'নাগরিক ফিডব্যাক' : 'Citizen Verification', desc: '5-star reviews & re-infestation flags', icon: Star, color: '#b45309', bg: '#fef3c7' },
     { id: 'guide', category: 'community', label: isBengali ? 'প্রতিরোধ গাইড' : 'Awareness & 3-Day Rule', desc: 'Public health mosquito protocols', icon: BookOpen, color: '#047857', bg: '#ecfdf5' },
     { id: 'helpline', category: 'community', label: isBengali ? 'মেডিকেল হেল্পলাইন' : 'Clinical Referral Depot', desc: 'Hospital NS1 & platelet centers', icon: HeartPulse, color: '#e11d48', bg: '#fff1f2' },
     { id: 'broadcast', category: 'community', label: isBengali ? 'জরুরি অ্যালার্ট' : 'Emergency SMS Gateway', desc: '1km geo-targeted squad alert', icon: Radio, color: '#dc2626', bg: '#fef2f2' }
   ];
 
-  const filteredTools = tools.filter(t => 
-    t.label.toLowerCase().includes(query.toLowerCase()) || 
-    t.desc.toLowerCase().includes(query.toLowerCase())
-  );
+  const filteredTools = tools.filter(t => {
+    const matchesSearch = t.label.toLowerCase().includes(query.toLowerCase()) || 
+                          t.desc.toLowerCase().includes(query.toLowerCase());
+    const matchesCat = selectedCategory === 'all' || t.category === selectedCategory;
+    return matchesSearch && matchesCat;
+  });
 
   const handleSelectTool = (tool) => {
     onClose();
@@ -62,21 +67,44 @@ export default function CommandHubModal({
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '680px', maxHeight: '90vh', overflowY: 'auto' }}>
+      <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '720px', maxHeight: '90vh', overflowY: 'auto' }}>
         <button className="modal-close" onClick={onClose}>
           <X size={18} color="#64748b" />
         </button>
 
         <div style={{ padding: '24px' }}>
+          {/* Header */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
             <div>
               <h2 style={{ margin: 0, fontSize: '1.3rem', fontWeight: 800 }}>
                 {isBengali ? 'কমান্ড সেন্টার টুলকিট' : 'Municipal Command Toolkit'}
               </h2>
               <span style={{ fontSize: '0.74rem', color: '#64748b', fontWeight: 600 }}>
-                {isBengali ? 'নংরা (Nongra) প্ল্যাটফর্মের সক্রিয় মডিউল হাব' : 'Unified municipal health & field operations hub'}
+                {isBengali ? 'নংরা (Nongra) প্ল্যাটফর্মের সমন্বিত মিউনিসিপ্যাল হাব' : 'Unified municipal health & field operations hub'}
               </span>
             </div>
+          </div>
+
+          {/* Municipal SLA Status Telemetry Bar */}
+          <div style={{
+            background: '#f8fafc',
+            border: '1px solid var(--border)',
+            borderRadius: '10px',
+            padding: '10px 14px',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '14px',
+            fontSize: '0.74rem'
+          }}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '5px', color: '#047857', fontWeight: 700 }}>
+              <CheckCircle2 size={14} color="#059669" />
+              {isBengali ? 'সিটি কর্পোরেশন টাস্কফোর্স সক্রিয়' : 'City Corporation Taskforce Online'}
+            </span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '5px', color: '#b45309', fontWeight: 700 }}>
+              <Clock size={13} color="#d97706" />
+              {isBengali ? 'গড় প্রতিক্রিয়া সময়: ১৪ ঘন্টা (এসএলএ < ৪৮ঘ)' : 'Avg Response: 14h (SLA < 48h)'}
+            </span>
           </div>
 
           {/* Highlighted Live Demo Stepper Launcher */}
@@ -128,16 +156,45 @@ export default function CommandHubModal({
             border: '1px solid var(--border)',
             borderRadius: '10px',
             padding: '8px 12px',
-            marginBottom: '18px'
+            marginBottom: '12px'
           }}>
             <Search size={16} color="#94a3b8" />
             <input
               type="text"
               value={query}
               onChange={e => setQuery(e.target.value)}
-              placeholder={isBengali ? "মডিউল বা টুল খুঁজুন (যেমন: Breteau, Triage, Route)..." : "Search modules (e.g. Breteau, Triage, Route, Audit)..."}
+              placeholder={isBengali ? "মডিউল বা টুল খুঁজুন (যেমন: Breteau, Quiz, Triage, Route)..." : "Search modules (e.g. Breteau, Quiz, Triage, Route, Audit)..."}
               style={{ border: 'none', background: 'transparent', outline: 'none', width: '100%', fontSize: '0.84rem' }}
             />
+          </div>
+
+          {/* Category Tabs */}
+          <div style={{ display: 'flex', gap: '6px', marginBottom: '14px', flexWrap: 'wrap' }}>
+            {[
+              { id: 'all', label: isBengali ? 'সবগুলো' : 'All Modules' },
+              { id: 'field', label: isBengali ? 'ফিল্ড অপারেশন' : 'Field Ops' },
+              { id: 'science', label: isBengali ? 'বিজ্ঞান ও জলবায়ু' : 'Science & Climate' },
+              { id: 'gov', label: isBengali ? 'শাসন ও অডিট' : 'Governance' },
+              { id: 'community', label: isBengali ? 'নাগরিক স্বাস্থ্য' : 'Community' }
+            ].map(cat => (
+              <button
+                key={cat.id}
+                type="button"
+                onClick={() => setSelectedCategory(cat.id)}
+                style={{
+                  padding: '4px 10px',
+                  borderRadius: '14px',
+                  border: '1px solid var(--border)',
+                  background: selectedCategory === cat.id ? '#0f172a' : '#f8fafc',
+                  color: selectedCategory === cat.id ? '#ffffff' : '#475569',
+                  fontSize: '0.72rem',
+                  fontWeight: 700,
+                  cursor: 'pointer'
+                }}
+              >
+                {cat.label}
+              </button>
+            ))}
           </div>
 
           {/* Grid Layout of Tools */}

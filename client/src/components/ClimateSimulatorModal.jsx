@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { X, CloudRain, Thermometer, Droplets, AlertTriangle, ShieldCheck, Play, RotateCcw, Sparkles } from 'lucide-react';
+import { X, CloudRain, Thermometer, Droplets, AlertTriangle, ShieldCheck, Play, RotateCcw, Sparkles, Sun, Zap } from 'lucide-react';
 
 export default function ClimateSimulatorModal({ isOpen, onClose, isBengali = false }) {
   if (!isOpen) return null;
 
-  // Meteorological sliders for Ashulia post-monsoon climate
+  // Meteorological sliders for Ashulia post-monsoon climate[cite: 2]
   const [temperature, setTemperature] = useState(31); // °C
   const [humidity, setHumidity] = useState(84);       // %
   const [rainfall, setRainfall] = useState(25);       // mm (24h accumulation)
@@ -14,6 +14,12 @@ export default function ClimateSimulatorModal({ isOpen, onClose, isBengali = fal
     setTemperature(31);
     setHumidity(84);
     setRainfall(18);
+  };
+
+  const applyWeatherScenario = (temp, hum, rain) => {
+    setTemperature(temp);
+    setHumidity(hum);
+    setRainfall(rain);
   };
 
   // Entomological Model calculations
@@ -48,12 +54,11 @@ export default function ClimateSimulatorModal({ isOpen, onClose, isBengali = fal
   };
 
   const metrics = calculateLarvalCycle();
-
   const isHighAlert = metrics.probability >= 75;
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '620px', maxHeight: '90vh', overflowY: 'auto' }}>
+      <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '640px', maxHeight: '90vh', overflowY: 'auto' }}>
         <button className="modal-close" onClick={onClose}>
           <X size={18} color="#64748b" />
         </button>
@@ -101,15 +106,72 @@ export default function ClimateSimulatorModal({ isOpen, onClose, isBengali = fal
                 cursor: 'pointer'
               }}
             >
-              <RotateCcw size={12} /> {isBengali ? 'বর্তমান আবহাওয়া' : 'Baseline'}
+              <RotateCcw size={12} /> {isBengali ? 'বর্তমান আবহাওয়া' : 'Baseline'}
             </button>
           </div>
 
-          <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', margin: '0 0 18px', lineHeight: 1.5 }}>
+          <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', margin: '0 0 16px', lineHeight: 1.5 }}>
             {isBengali
-              ? 'তাপমাত্রা, আর্দ্রতা ও বর্ষণের তারতম্য পরিবর্তন করে এডিস মশার ডিম থেকে পূর্ণাঙ্গ মশা হওয়ার সময়সীমা এবং প্রাদুর্ভাবের সম্ভাবনা তাৎক্ষণিকভাবে পরীক্ষা করুন।'
+              ? 'তাপমাত্রা, আর্দ্রতা ও বর্ষণের তারতম্য পরিবর্তন করে এডিস মশার ডিম থেকে পূর্ণাঙ্গ মশা হওয়ার সময়সীমা এবং প্রাদুর্ভাবের সম্ভাবনা তাৎক্ষণিকভাবে পরীক্ষা করুন।'
               : 'Interactive meteorological sensitivity tool calculating larval instar acceleration and outbreak risk across Ashulia under shifting weather variables.'}
           </p>
+
+          {/* Quick Scenario Triggers */}
+          <div style={{ marginBottom: '16px' }}>
+            <div style={{ fontSize: '0.72rem', fontWeight: 700, color: '#64748b', marginBottom: '6px' }}>
+              {isBengali ? 'আবহাওয়া দৃশ্যপট পরীক্ষা:' : 'Simulate Climate Scenarios:'}
+            </div>
+            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                onClick={() => applyWeatherScenario(32, 90, 45)}
+                style={{
+                  padding: '4px 10px',
+                  borderRadius: '14px',
+                  border: '1px solid #fee2e2',
+                  background: '#fef2f2',
+                  color: '#dc2626',
+                  fontSize: '0.72rem',
+                  fontWeight: 700,
+                  cursor: 'pointer'
+                }}
+              >
+                {isBengali ? 'ভারী বর্ষণ ও উচ্চ আর্দ্রতা (বিপদ)' : 'Heavy Rain & Heat Spike (Emergency)'}
+              </button>
+              <button
+                type="button"
+                onClick={() => applyWeatherScenario(29, 65, 5)}
+                style={{
+                  padding: '4px 10px',
+                  borderRadius: '14px',
+                  border: '1px solid #e0f2fe',
+                  background: '#eff6ff',
+                  color: '#0369a1',
+                  fontSize: '0.72rem',
+                  fontWeight: 700,
+                  cursor: 'pointer'
+                }}
+              >
+                {isBengali ? 'শুষ্ক রোদের দিন' : 'Dry Sunny Spell'}
+              </button>
+              <button
+                type="button"
+                onClick={() => applyWeatherScenario(20, 50, 0)}
+                style={{
+                  padding: '4px 10px',
+                  borderRadius: '14px',
+                  border: '1px solid #e2e8f0',
+                  background: '#f8fafc',
+                  color: '#475569',
+                  fontSize: '0.72rem',
+                  fontWeight: 700,
+                  cursor: 'pointer'
+                }}
+              >
+                {isBengali ? 'শীতকালীন বিরতি' : 'Winter Dormancy Period'}
+              </button>
+            </div>
+          </div>
 
           {/* Meteorological Sliders */}
           <div style={{ background: '#f8fafc', border: '1px solid var(--border)', borderRadius: '12px', padding: '16px', marginBottom: '20px' }}>
@@ -214,7 +276,7 @@ export default function ClimateSimulatorModal({ isOpen, onClose, isBengali = fal
 
             <div style={{ background: '#ffffff', border: '1px solid var(--border)', borderRadius: '10px', padding: '12px', textAlign: 'center' }}>
               <div style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 700 }}>
-                {isBengali ? 'পিক কামড়ানোর সময়' : 'Expected Adult Peak'}
+                {isBengali ? 'পিক কামড়ানোর সময়' : 'Expected Adult Peak'}
               </div>
               <div style={{ fontSize: '1.45rem', fontWeight: 900, color: '#1e293b', marginTop: '2px' }}>
                 +{metrics.peakOutbreakWindow} <span style={{ fontSize: '0.8rem' }}>days</span>
@@ -230,8 +292,8 @@ export default function ClimateSimulatorModal({ isOpen, onClose, isBengali = fal
             background: isHighAlert ? '#fef2f2' : '#f0fdf4',
             border: `1px solid ${isHighAlert ? '#fee2e2' : '#bbf7d0'}`,
             borderRadius: '10px',
-            padding: '12px 14px',
-            fontSize: '0.76rem',
+            padding: '14px',
+            fontSize: '0.78rem',
             color: isHighAlert ? '#991b1b' : '#166534',
             display: 'flex',
             alignItems: 'center',
@@ -241,10 +303,10 @@ export default function ClimateSimulatorModal({ isOpen, onClose, isBengali = fal
             <span>
               {isHighAlert
                 ? (isBengali
-                  ? 'উচ্চ তাপমাত্রা ও বৃষ্টিপাতের সংমিশ্রণে এডিস লার্ভার বৃদ্ধি অস্বাভাবিক দ্রুত হচ্ছে। আগামী ৪৮ ঘণ্টার মধ্যে ক্যাম্পাস ও ছাদে জৈব লার্ভিসাইড প্রয়োগ বাধ্যতামূলক।'
+                  ? 'উচ্চ তাপমাত্রা ও বৃষ্টিপাতের সংমিশ্রণে এডিস লার্ভার বৃদ্ধি অস্বাভাবিক দ্রুত হচ্ছে। আগামী ৪৮ ঘণ্টার মধ্যে ক্যাম্পাস ও ছাদে জৈব লার্ভিসাইড প্রয়োগ বাধ্যতামূলক।'
                   : 'Critical Vector Window: Elevated temperature and standing rain accelerate larval development. Initiate biological Bti larviciding and roof drainage within 48 hours to avert an adult mosquito wave.')
                 : (isBengali
-                  ? 'বর্তমান আবহাওয়া স্থিতিশীল। রুটিনমাফিক ৩ দিনের পানি নিষ্কাশন কার্যক্রম বজায় রাখুন।'
+                  ? 'বর্তমান আবহাওয়া স্থিতিশীল। রুটিনমাফিক ৩ দিনের পানি নিষ্কাশন কার্যক্রম বজায় রাখুন।'
                   : 'Favorable condition: Normal larval incubation pace. Maintain standard 3-day water evacuation cycles.')}
             </span>
           </div>

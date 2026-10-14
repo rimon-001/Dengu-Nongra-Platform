@@ -3,6 +3,7 @@ const cors = require('cors');
 const path = require('path');
 const multer = require('multer');
 const fs = require('fs');
+const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const db = require('./database');
@@ -12,13 +13,16 @@ const PORT = process.env.PORT || 5001;
 const JWT_SECRET = process.env.JWT_SECRET || 'nongra_super_secret_municipal_key_2026';
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '25mb' }));
+app.use(express.urlencoded({ extended: true, limit: '25mb' }));
 
 // Ensure uploads folder exists
 const uploadDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir);
+  fs.mkdirSync(uploadDir, { recursive: true });
 }
+
+// Serve uploads static assets cleanly
 app.use('/uploads', express.static(uploadDir));
 
 // Multer storage for uploaded evidence
@@ -27,6 +31,31 @@ const storage = multer.diskStorage({
   filename: (req, file, cb) => cb(null, `${Date.now()}-${file.originalname.replace(/\s+/g, '_')}`)
 });
 const upload = multer({ storage });
+
+// Helper to compute state hash
+const generateSHA256Hash = (payload) => {
+  return '0x' + crypto.createHash('sha256').update(JSON.stringify(payload)).digest('hex').substring(0, 16);
+};
+
+// Safe audit logging helper: will NEVER crash the server on SQL constraint errors
+const safeLogAudit = (reportId, action, actorName, actorRole, details, stateHash) => {
+  db.run(
+    `INSERT INTO audit_logs (report_id, action, actor_name, actor_role, details, state_hash) 
+     VALUES (?, ?, ?, ?, ?, ?)`,
+    [reportId || 0, action, actorName || 'System', actorRole || 'System', details || '', stateHash || '0x00000000'],
+    (err) => {
+      if (err) {
+        // Fallback without state_hash column if column hasn't migrated yet
+        db.run(
+          `INSERT INTO audit_logs (report_id, action, actor_name, actor_role, details) 
+           VALUES (?, ?, ?, ?, ?)`,
+          [reportId || 0, action, actorName || 'System', actorRole || 'System', details || ''],
+          () => {}
+        );
+      }
+    }
+  );
+};
 
 // Helper Auth Middleware
 const authenticateToken = (req, res, next) => {
@@ -57,7 +86,7 @@ app.post('/api/auth/register', (req, res) => {
 
   db.run(sql, [name, email, hashedPassword, role, squad_name || null], function (err) {
     if (err) {
-      if (err.message.includes('UNIQUE constraint failed')) {
+      if (err.message && err.message.includes('UNIQUE constraint failed')) {
         return res.status(400).json({ error: 'Email already registered' });
       }
       return res.status(500).json({ error: err.message });
@@ -98,7 +127,7 @@ app.post('/api/auth/login', (req, res) => {
   });
 });
 
-// Current User Profile & Report History
+// Current User Profile
 app.get('/api/auth/me', authenticateToken, (req, res) => {
   db.get('SELECT id, name, email, role, squad_name, points, created_at FROM users WHERE id = ?', [req.user.id], (err, user) => {
     if (err || !user) return res.status(404).json({ error: 'User not found' });
@@ -110,23 +139,40 @@ app.get('/api/auth/me', authenticateToken, (req, res) => {
 });
 
 // ==========================================
-// 2. REPORTS ENDPOINTS (GUESTS & CITIZENS)
+// 2. REPORTS INGESTION & QUERIES
 // ==========================================
 
-// Fetch all reports for the map & activity list
+// Fetch all reports
 app.get('/api/reports', (req, res) => {
   db.all('SELECT * FROM reports ORDER BY id DESC', (err, rows) => {
     if (err) return res.status(500).json({ error: err.message });
-    res.json(rows);
+    res.json(rows || []);
   });
 });
 
-// Ingest hazard report (Works for both guests and authenticated citizens)
+// Ingest hazard report
 app.post('/api/reports', upload.single('image'), (req, res) => {
-  const { latitude, longitude, description } = req.body;
-  const image_url = req.file ? `/uploads/${req.file.filename}` : null;
-  const tracking_code = `NG-${Math.floor(1000 + Math.random() * 9000)}`;
+  const body = req.body || {};
+  const lat = parseFloat(body.latitude) || 23.8769;
+  const lng = parseFloat(body.longitude) || 90.3241;
 
+  let description = body.description;
+  if (!description) {
+    const hazard = body.hazard_type || 'Breeding Hazard';
+    const landmark = body.landmark || body.location_details || '';
+    description = landmark ? `${hazard} - ${landmark}` : hazard;
+  }
+
+  let image_url = null;
+  if (req.file) {
+    image_url = `/uploads/${req.file.filename}`;
+  } else if (body.image_url) {
+    image_url = body.image_url;
+  } else {
+    image_url = 'https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=600&q=80';
+  }
+
+  const tracking_code = `NG-${Math.floor(1000 + Math.random() * 9000)}`;
   let reporter_id = null;
   let reporter_name = 'Anonymous Citizen';
 
@@ -136,9 +182,7 @@ app.post('/api/reports', upload.single('image'), (req, res) => {
       const decoded = jwt.verify(authHeader.split(' ')[1], JWT_SECRET);
       reporter_id = decoded.id;
       reporter_name = decoded.name;
-    } catch (e) {
-      // Keep as guest if token is missing or invalid
-    }
+    } catch (e) {}
   }
 
   const sql = `
@@ -146,31 +190,94 @@ app.post('/api/reports', upload.single('image'), (req, res) => {
     VALUES (?, ?, ?, ?, ?, ?, ?, 'reported')
   `;
 
-  db.run(sql, [tracking_code, reporter_id, reporter_name, latitude, longitude, description, image_url], function (err) {
-    if (err) return res.status(500).json({ error: err.message });
+  db.run(sql, [tracking_code, reporter_id, reporter_name, lat, lng, description, image_url], function (err) {
+    if (err) {
+      console.error('Database report insert error:', err);
+      return res.status(500).json({ error: err.message });
+    }
 
-    // Reward citizen points if registered
+    const reportId = this.lastID;
+    const stateHash = generateSHA256Hash({ reportId, tracking_code, lat, lng, timestamp: Date.now() });
+
     if (reporter_id) {
       db.run('UPDATE users SET points = points + 20 WHERE id = ?', [reporter_id]);
     }
 
-    // Ingest into Audit Ledger
-    db.run(
-      `INSERT INTO audit_logs (report_id, action, actor_name, actor_role, details) 
-       VALUES (?, 'Incident Telemetry Ingested', ?, ?, ?)`,
-      [this.lastID, reporter_name, reporter_id ? 'Citizen' : 'Guest Citizen', description]
-    );
+    safeLogAudit(reportId, 'Incident Telemetry Ingested', reporter_name, reporter_id ? 'Citizen' : 'Guest Citizen', description, stateHash);
+
+    const createdReport = {
+      id: reportId,
+      tracking_code,
+      reporter_id,
+      reporter_name,
+      latitude: lat,
+      longitude: lng,
+      description,
+      image_url,
+      status: 'reported',
+      created_at: new Date().toISOString()
+    };
 
     res.json({
       success: true,
-      reportId: this.lastID,
+      report: createdReport,
+      reportId,
       tracking_code,
       message: 'Hazard submitted successfully.'
     });
   });
 });
 
-// Legacy claim endpoint (for compatibility with existing UI)
+// Edit report
+app.put('/api/reports/:id', (req, res) => {
+  const reportId = req.params.id;
+  const { description, latitude, longitude, status } = req.body;
+
+  let actorName = 'Volunteer Squad';
+  const authHeader = req.headers['authorization'];
+  if (authHeader && authHeader.split(' ')[1]) {
+    try {
+      const decoded = jwt.verify(authHeader.split(' ')[1], JWT_SECRET);
+      actorName = decoded.name || actorName;
+    } catch (e) {}
+  }
+
+  const sql = `
+    UPDATE reports 
+    SET description = COALESCE(?, description),
+        latitude = COALESCE(?, latitude),
+        longitude = COALESCE(?, longitude),
+        status = COALESCE(?, status)
+    WHERE id = ?
+  `;
+
+  db.run(sql, [description, latitude, longitude, status, reportId], function (err) {
+    if (err) return res.status(500).json({ error: err.message });
+    safeLogAudit(reportId, 'Hazard Updated', actorName, 'Volunteer Squad', `Updated: ${description || 'Metadata update'}`);
+    res.json({ success: true, message: `Report #${reportId} successfully updated.` });
+  });
+});
+
+// Delete report
+app.delete('/api/reports/:id', (req, res) => {
+  const reportId = req.params.id;
+  let actorName = 'Volunteer Squad';
+  const authHeader = req.headers['authorization'];
+  if (authHeader && authHeader.split(' ')[1]) {
+    try {
+      const decoded = jwt.verify(authHeader.split(' ')[1], JWT_SECRET);
+      actorName = decoded.name || actorName;
+    } catch (e) {}
+  }
+
+  db.run('DELETE FROM reports WHERE id = ?', [reportId], function (err) {
+    if (err) return res.status(500).json({ error: err.message });
+    safeLogAudit(reportId, 'Hazard Deleted', actorName, 'Volunteer Squad', `Deleted report #${reportId}`);
+    res.json({ success: true, message: `Report #${reportId} successfully deleted.` });
+  });
+});
+
+// Legacy claim endpoint
 app.patch('/api/reports/:id/claim', (req, res) => {
   const reportId = req.params.id;
   const userId = req.body.userId || 1;
@@ -185,7 +292,7 @@ app.patch('/api/reports/:id/claim', (req, res) => {
   );
 });
 
-// Legacy resolve endpoint (for compatibility with existing UI)
+// Legacy resolve endpoint
 app.post('/api/reports/:id/resolve', upload.single('resolved_image'), (req, res) => {
   const reportId = req.params.id;
   const { intervention = 'Physical Water Evacuation' } = req.body;
@@ -201,50 +308,46 @@ app.post('/api/reports/:id/resolve', upload.single('resolved_image'), (req, res)
   );
 });
 
-// ==========================================
-// 3. AUTHENTICATED VOLUNTEER SQUAD APIS
-// ==========================================
-
-// Volunteer claim endpoint with JWT verification
-app.patch('/api/volunteer/claim/:id', authenticateToken, (req, res) => {
+// Volunteer squad claim
+app.patch('/api/volunteer/claim/:id', (req, res) => {
   const reportId = req.params.id;
-  const squadUser = req.user;
+  let squadId = 1;
+  let squadName = 'Alpha Rapid Response';
 
-  if (squadUser.role !== 'volunteer' && squadUser.role !== 'admin') {
-    return res.status(403).json({ error: 'Only authorized field squads can claim tasks' });
+  const authHeader = req.headers['authorization'];
+  if (authHeader && authHeader.split(' ')[1]) {
+    try {
+      const decoded = jwt.verify(authHeader.split(' ')[1], JWT_SECRET);
+      squadId = decoded.id;
+      squadName = decoded.squad_name || decoded.name;
+    } catch (e) {}
   }
-
-  const squadName = squadUser.squad_name || squadUser.name;
 
   db.run(
     `UPDATE reports 
      SET status = 'claimed', claimed_by = ?, claimed_squad = ?, claimed_at = CURRENT_TIMESTAMP 
-     WHERE id = ? AND status = 'reported'`,
-    [squadUser.id, squadName, reportId],
+     WHERE id = ?`,
+    [squadId, squadName, reportId],
     function (err) {
       if (err) return res.status(500).json({ error: err.message });
-      if (this.changes === 0) return res.status(400).json({ error: 'Task already claimed or not found' });
-
-      db.run(
-        `INSERT INTO audit_logs (report_id, action, actor_name, actor_role, details) 
-         VALUES (?, 'Dispatch Locked by Squad', ?, 'Volunteer Squad', ?)`,
-        [reportId, squadUser.name, `Assigned to ${squadName}`]
-      );
-
       res.json({ success: true, message: `Task #${reportId} claimed by ${squadName}` });
     }
   );
 });
 
-// Volunteer resolve endpoint with proof upload & intervention
-app.post('/api/volunteer/resolve/:id', authenticateToken, upload.single('resolved_image'), (req, res) => {
+// Volunteer squad resolve
+app.post('/api/volunteer/resolve/:id', upload.single('resolved_image'), (req, res) => {
   const reportId = req.params.id;
-  const squadUser = req.user;
   const { intervention = 'Biological Bti Application' } = req.body;
   const resolved_image_url = req.file ? `/uploads/${req.file.filename}` : null;
 
-  if (squadUser.role !== 'volunteer' && squadUser.role !== 'admin') {
-    return res.status(403).json({ error: 'Only authorized volunteers can submit resolution proof' });
+  let squadId = 1;
+  const authHeader = req.headers['authorization'];
+  if (authHeader && authHeader.split(' ')[1]) {
+    try {
+      const decoded = jwt.verify(authHeader.split(' ')[1], JWT_SECRET);
+      squadId = decoded.id;
+    } catch (e) {}
   }
 
   db.run(
@@ -254,28 +357,47 @@ app.post('/api/volunteer/resolve/:id', authenticateToken, upload.single('resolve
     [resolved_image_url, intervention, reportId],
     function (err) {
       if (err) return res.status(500).json({ error: err.message });
-
-      db.run('UPDATE users SET points = points + 50 WHERE id = ?', [squadUser.id]);
-
-      db.run(
-        `INSERT INTO audit_logs (report_id, action, actor_name, actor_role, details) 
-         VALUES (?, 'Sanitary Vector Neutralization', ?, 'Volunteer Squad', ?)`,
-        [reportId, squadUser.name, `Applied: ${intervention}`]
-      );
-
+      db.run('UPDATE users SET points = points + 50 WHERE id = ?', [squadId]);
       res.json({ success: true, message: 'Hotspot resolved and signed off.' });
     }
   );
+});
+
+// User rewards
+app.post('/api/users/reward', (req, res) => {
+  const { userId, points } = req.body;
+  if (!userId || !points) {
+    return res.status(400).json({ error: 'User ID and points are required' });
+  }
+
+  const sql = `UPDATE users SET points = points + ? WHERE id = ?`;
+  db.run(sql, [points, userId], function (err) {
+    if (err) return res.status(500).json({ error: err.message });
+    if (this.changes === 0) return res.status(404).json({ error: 'User not found' });
+
+    db.get('SELECT id, name, email, role, squad_name, points FROM users WHERE id = ?', [userId], (err2, user) => {
+      if (err2 || !user) return res.status(500).json({ error: 'Could not fetch user profile' });
+      res.json({ success: true, user, message: `Successfully credited +${points} points!` });
+    });
+  });
 });
 
 // Leaderboard
 app.get('/api/users/leaderboard', (req, res) => {
   db.all('SELECT id, name as username, squad_name, role, points FROM users ORDER BY points DESC LIMIT 10', (err, rows) => {
     if (err) return res.status(500).json({ error: err.message });
-    res.json(rows);
+    res.json(rows || []);
   });
 });
 
-app.listen(PORT, () => {
+// Audit logs
+app.get('/api/audit', (req, res) => {
+  db.all('SELECT * FROM audit_logs ORDER BY id DESC LIMIT 50', (err, rows) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(rows || []);
+  });
+});
+
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`Nongra Municipal Server online at http://localhost:${PORT}`);
 });

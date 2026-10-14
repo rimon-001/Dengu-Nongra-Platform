@@ -28,12 +28,56 @@ import CommandHubModal from './components/CommandHubModal';
 import ShowcaseRunnerModal from './components/ShowcaseRunnerModal';
 import AuthModal from './components/AuthModal';
 import VolunteerPortal from './components/VolunteerPortal';
+import DengueKnowledgeQuizModal from './components/DengueKnowledgeQuizModal';
+import ProjectWalkthroughModal from './components/ProjectWalkthroughModal';
+import NongraBriefSection from './components/NongraBriefSection';
 import { 
-  Map, Activity, User, Plus, BarChart3, Zap, Navigation, Globe, 
-  Presentation, FileText, Radio, LineChart, Building2, RefreshCw, 
-  PackageCheck, HeartPulse, Calculator, BookOpen, Radar, ClipboardCheck, 
-  CloudRain, Route, Star, FileCheck, ShieldCheck, LayoutGrid, LogIn, Shield, LogOut, Bell
+  Map, Activity, User, Plus, Globe, LayoutGrid, LogIn, Shield, LogOut, Bell,
+  ChevronLeft, ChevronRight, AlertTriangle, Zap, Award, BookOpen, Sparkles
 } from 'lucide-react';
+
+const BANNER_SLIDES = [
+  {
+    id: 1,
+    titleEn: 'National Dengue & Vector Surveillance Mission',
+    titleBn: 'জাতীয় ডেঙ্গু প্রতিরোধ ও ভেক্টর নজরদারি মিশন',
+    subtitleEn: 'Crowdsourced community hazard mapping and rapid larvae eradication.',
+    subtitleBn: 'নাগরিক রিপোর্ট ও দ্রুত লার্ভা নিষ্কাশনের সমন্বিত ডিজিটাল নেটওয়ার্ক।',
+    tagEn: 'Surveillance & Cleanup',
+    tagBn: 'নজরদারি ও পরিচ্ছন্নতা',
+    image: 'https://images.unsplash.com/photo-1584467735871-8e85353a8413?auto=format&fit=crop&w=1200&q=80'
+  },
+  {
+    id: 2,
+    titleEn: 'Eliminate Stagnant Water & Breeding Sites',
+    titleBn: 'জমে থাকা পানি ও এডিস মশার প্রজননস্থল ধ্বংস করুন',
+    subtitleEn: 'Inspect open drums, flower pots, discarded tyres, and rooftop drains.',
+    subtitleBn: 'খোলা ড্রাম, টব, পরিত্যক্ত টায়ার ও ছাদের ড্রেন নিয়মিত পরিষ্কার রাখুন।',
+    tagEn: 'Larval Prevention',
+    tagBn: 'লার্ভা দমন অভিযান',
+    image: 'https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=1200&q=80'
+  },
+  {
+    id: 3,
+    titleEn: 'Community Drone & Geo-Tagged Reporting',
+    titleBn: 'ড্রোন ও রিয়েল-টাইম জিও-ট্যাগিং প্রযুক্তি',
+    subtitleEn: 'Pin unreachable breeding spots, storm drains, and open reservoirs.',
+    subtitleBn: 'দুর্গম প্রজননস্থল ও জলাবদ্ধ এলাকা ম্যাপে চিহ্নিত করে দ্রুত ব্যবস্থা নিন।',
+    tagEn: 'GIS & Aerial Tech',
+    tagBn: 'জিআইএস প্রযুক্তি',
+    image: 'https://images.unsplash.com/photo-1508614589041-895b88991e3e?auto=format&fit=crop&w=1200&q=80'
+  },
+  {
+    id: 4,
+    titleEn: 'Join As a Squad Volunteer Today',
+    titleBn: 'স্বেচ্ছাসেবক স্কোয়াডে যুক্ত হোন আজই',
+    subtitleEn: 'Verify hazards, perform physical clearing, and earn sanitary badges.',
+    subtitleBn: 'ঝুঁকিপূর্ণ স্থান চিহ্নিত করুন, পরিচ্ছন্নতা অভিযানে অংশ নিয়ে সনদ অর্জন করুন।',
+    tagEn: 'Citizen Action',
+    tagBn: 'নাগরিক অংশগ্রহণ',
+    image: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=1200&q=80'
+  }
+];
 
 const FALLBACK_REPORTS = [
   {
@@ -77,6 +121,39 @@ const FALLBACK_REPORTS = [
   }
 ];
 
+const SIMULATION_SCENARIOS = [
+  {
+    type: 'Stagnant Water / Puddle',
+    descEn: '⚠️ [Simulated] Deep rain puddle behind cafeteria block with mosquito larvae',
+    descBn: '⚠️ [সিমুলেশন] ক্যাফেটেরিয়ার পেছনে বৃষ্টির জমে থাকা পানি ও এডিসের লার্ভা',
+    image: 'https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=400&q=80'
+  },
+  {
+    type: 'Discarded Plastic & Coconut Shells',
+    descEn: '⚠️ [Simulated] Discarded coconut shells & plastic containers near Gate 2',
+    descBn: '⚠️ [সিমুলেশন] গেট ২ এর কাছে ফেলে দেওয়া ডাবের খোসা ও প্লাস্টিকে জমে থাকা পানি',
+    image: 'https://images.unsplash.com/photo-1584467735871-8e85353a8413?auto=format&fit=crop&w=400&q=80'
+  },
+  {
+    type: 'Clogged Municipal Storm Drain',
+    descEn: '⚠️ [Simulated] Blocked culvert drain accumulating stagnant water and pupae',
+    descBn: '⚠️ [সিমুলেশন] বন্ধ কালভার্ট ড্রেনে আবর্জনা ও এডিসের লার্ভার বিস্তার',
+    image: 'https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=400&q=80'
+  },
+  {
+    type: 'Uncovered Rooftop Water Tank',
+    descEn: '⚠️ [Simulated] Uncovered rooftop overhead water tank with vector breeding',
+    descBn: '⚠️ [সিমুলেশন] ছাদের উন্মুক্ত পানির ট্যাংকে এডিস মশার লার্ভার প্রজননস্থল',
+    image: 'https://images.unsplash.com/photo-1584467735871-8e85353a8413?auto=format&fit=crop&w=400&q=80'
+  },
+  {
+    type: 'Discarded Vehicle Tyres',
+    descEn: '⚠️ [Simulated] Abandoned automobile tyres holding rain near transport depot',
+    descBn: '⚠️ [সিমুলেশন] পরিবহন ডিপোর পাশে পরিত্যক্ত টায়ারে বৃষ্টির পানি ও লার্ভা',
+    image: 'https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=400&q=80'
+  }
+];
+
 export default function App() {
   const [reports, setReports] = useState(FALLBACK_REPORTS);
   const [users, setUsers] = useState([]);
@@ -84,7 +161,8 @@ export default function App() {
   const [newDispatchAlert, setNewDispatchAlert] = useState(null);
   const previousReportCount = useRef(FALLBACK_REPORTS.length);
 
-  // Authentication State
+  const [currentSlide, setCurrentSlide] = useState(0);
+
   const [currentUser, setCurrentUser] = useState(() => {
     const saved = localStorage.getItem('nongra_user');
     return saved ? JSON.parse(saved) : null;
@@ -115,6 +193,8 @@ export default function App() {
   const [isClearanceOpen, setIsClearanceOpen] = useState(false);
   const [isHubOpen, setIsHubOpen] = useState(false);
   const [isShowcaseOpen, setIsShowcaseOpen] = useState(false);
+  const [isQuizOpen, setIsQuizOpen] = useState(false);
+  const [isWalkthroughOpen, setIsWalkthroughOpen] = useState(false);
 
   const [currentView, setCurrentView] = useState('map');
   const [isBengali, setIsBengali] = useState(false);
@@ -131,11 +211,10 @@ export default function App() {
       if (reportsRes && reportsRes.ok) {
         const data = await reportsRes.json();
         if (Array.isArray(data) && data.length > 0) {
-          // Detect new incident arrival for squads
           if (data.length > previousReportCount.current) {
             const newest = data[0];
             setNewDispatchAlert(newest);
-            setTimeout(() => setNewDispatchAlert(null), 6000);
+            setTimeout(() => setNewDispatchAlert(null), 5000);
           }
           previousReportCount.current = data.length;
           setReports(data);
@@ -155,10 +234,24 @@ export default function App() {
 
   useEffect(() => {
     fetchData();
-    // Background polling interval: 8 seconds
     const interval = setInterval(fetchData, 8000);
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    const slideInterval = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % BANNER_SLIDES.length);
+    }, 4500);
+    return () => clearInterval(slideInterval);
+  }, []);
+
+  const handlePrevSlide = () => {
+    setCurrentSlide((prev) => (prev === 0 ? BANNER_SLIDES.length - 1 : prev - 1));
+  };
+
+  const handleNextSlide = () => {
+    setCurrentSlide((prev) => (prev + 1) % BANNER_SLIDES.length);
+  };
 
   const handleLogout = () => {
     localStorage.removeItem('nongra_token');
@@ -167,27 +260,112 @@ export default function App() {
     setIsVolunteerPortalOpen(false);
   };
 
-  const handleSimulateReport = () => {
-    const randomOffsetLat = (Math.random() - 0.5) * 0.008;
-    const randomOffsetLng = (Math.random() - 0.5) * 0.008;
+  const handleRewardEarned = (pointsEarned) => {
+    if (!currentUser) return;
+    const updatedUser = {
+      ...currentUser,
+      points: (currentUser.points || 0) + pointsEarned
+    };
+    setCurrentUser(updatedUser);
+    localStorage.setItem('nongra_user', JSON.stringify(updatedUser));
+
+    fetch('/api/users/reward', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: currentUser.id, points: pointsEarned })
+    }).catch(() => null);
+  };
+
+  // Immediate Local & Remote Addition Handler
+  const handleReportAdded = (newReport) => {
+    if (newReport && typeof newReport === 'object') {
+      setReports((prev) => [newReport, ...prev]);
+      setNewDispatchAlert(newReport);
+      setTimeout(() => setNewDispatchAlert(null), 5000);
+    }
+    fetchData();
+  };
+
+  // Volunteer Delete Handler
+  const handleDeleteReport = async (reportId) => {
+    setReports(prev => prev.filter(r => r.id !== reportId));
+    if (selectedTask?.id === reportId) {
+      setSelectedTask(null);
+    }
+
+    try {
+      const token = localStorage.getItem('nongra_token');
+      await fetch(`/api/reports/${reportId}`, {
+        method: 'DELETE',
+        headers: {
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        }
+      });
+      fetchData();
+    } catch (e) {
+      console.warn('Offline report deletion complete:', e);
+    }
+  };
+
+  // Volunteer Edit Handler
+  const handleUpdateReport = async (reportId, updatedFields) => {
+    setReports(prev => prev.map(r => r.id === reportId ? { ...r, ...updatedFields } : r));
+    setSelectedTask(prev => prev?.id === reportId ? { ...prev, ...updatedFields } : prev);
+
+    try {
+      const token = localStorage.getItem('nongra_token');
+      await fetch(`/api/reports/${reportId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify(updatedFields)
+      });
+      fetchData();
+    } catch (e) {
+      console.warn('Offline report update fallback:', e);
+    }
+  };
+
+  const handleSimulateReport = async () => {
+    const scenario = SIMULATION_SCENARIOS[Math.floor(Math.random() * SIMULATION_SCENARIOS.length)];
+    const randomOffsetLat = (Math.random() - 0.5) * 0.009;
+    const randomOffsetLng = (Math.random() - 0.5) * 0.009;
+
     const newSimulatedReport = {
       id: Date.now(),
       tracking_code: `NG-${Math.floor(1000 + Math.random() * 9000)}`,
-      latitude: 23.8759 + randomOffsetLat,
-      longitude: 90.3205 + randomOffsetLng,
-      image_url: 'https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=400&q=80',
+      latitude: 23.8768 + randomOffsetLat,
+      longitude: 90.3201 + randomOffsetLng,
+      image_url: scenario.image,
       resolved_image_url: null,
-      description: isBengali
-        ? '⚠️ [সিমুলেশন] উন্মুক্ত ছাদে বৃষ্টির জমে থাকা পানি ও এডিসের লার্ভা'
-        : '⚠️ [Simulated] Uncovered rooftop water storage tank with mosquito pupae',
+      description: isBengali ? scenario.descBn : scenario.descEn,
       status: 'reported',
       claimed_by: null,
       intervention: null,
       created_at: new Date().toISOString()
     };
 
-    setReports(prev => [newSimulatedReport, ...prev]);
-    setSelectedTask(newSimulatedReport);
+    try {
+      await fetch('/api/reports', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          hazard_type: scenario.type,
+          description: newSimulatedReport.description,
+          latitude: newSimulatedReport.latitude,
+          longitude: newSimulatedReport.longitude,
+          image_url: newSimulatedReport.image_url
+        })
+      });
+    } catch (e) {
+      console.warn('Simulation persistence fallback:', e);
+    }
+
+    setReports((prev) => [newSimulatedReport, ...prev]);
+    setNewDispatchAlert(newSimulatedReport);
+    setTimeout(() => setNewDispatchAlert(null), 5000);
   };
 
   const handleClaim = async (id) => {
@@ -202,14 +380,14 @@ export default function App() {
     }
 
     setReports((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, status: 'claimed', claimed_by: 1 } : r))
+      prev.map((r) => (r.id === id ? { ...r, status: 'claimed', claimed_by: currentUser?.id || 1 } : r))
     );
     if (selectedTask && selectedTask.id === id) {
-      setSelectedTask((prev) => ({ ...prev, status: 'claimed', claimed_by: 1 }));
+      setSelectedTask((prev) => ({ ...prev, status: 'claimed', claimed_by: currentUser?.id || 1 }));
     }
   };
 
-  const handleResolve = async (id, proofFile, intervention = 'Physical Water Evacuation') => {
+  const handleResolve = async (id, proofFile, intervention = 'Physical Water Evacuation & Container Scrubbing') => {
     const previewUrl = proofFile ? URL.createObjectURL(proofFile) : null;
 
     try {
@@ -238,11 +416,12 @@ export default function App() {
         intervention
       }));
     }
-    alert(isBengali ? 'পরিচ্ছন্নতা নিশ্চিত করা হয়েছে!' : `Site cleanup verified via ${intervention}!`);
+    alert(isBengali ? 'পরিচ্ছন্নতা সফলভাবে নিশ্চিত হয়েছে!' : `Site cleanup verified via ${intervention}!`);
   };
 
   const handleLaunchModal = (modalId) => {
     if (modalId === 'showcase') setIsShowcaseOpen(true);
+    else if (modalId === 'walkthrough') setIsWalkthroughOpen(true);
     else if (modalId === 'triage') setIsTriageOpen(true);
     else if (modalId === 'route') setIsRouteOpen(true);
     else if (modalId === 'radar') setIsRadarOpen(true);
@@ -261,6 +440,7 @@ export default function App() {
     else if (modalId === 'guide') setIsAwarenessOpen(true);
     else if (modalId === 'helpline') setIsHelplineOpen(true);
     else if (modalId === 'broadcast') setIsBroadcastOpen(true);
+    else if (modalId === 'quiz') setIsQuizOpen(true);
   };
 
   const activeCount = reports.filter((r) => r.status === 'reported').length;
@@ -275,7 +455,7 @@ export default function App() {
 
   return (
     <>
-      {/* Live Ingestion Toast Alert */}
+      {/* Real-time Ingestion Toast */}
       {newDispatchAlert && (
         <div style={{
           position: 'fixed',
@@ -306,8 +486,10 @@ export default function App() {
             <Bell size={13} color="#fff" />
           </span>
           <div>
-            <strong>{isBengali ? 'নতুন ঝুঁকি রিপোর্ট দাখিল হয়েছে!' : 'New Stagnant Hazard Ingested!'}</strong>
-            <span style={{ marginLeft: '6px', color: '#94a3b8' }}>{newDispatchAlert.description?.slice(0, 36)}...</span>
+            <strong>{isBengali ? 'নতুন ঝুঁকি গ্রিডে যুক্ত হয়েছে!' : 'New Hazard Pinned to Map!'}</strong>
+            <span style={{ marginLeft: '6px', color: '#94a3b8' }}>
+              {newDispatchAlert.description?.slice(0, 36)}...
+            </span>
           </div>
           {currentUser?.role === 'volunteer' && (
             <button
@@ -332,6 +514,85 @@ export default function App() {
       )}
 
       <div className="container">
+        {/* Top Slideshow Banner */}
+        <section className="portal-banner-container">
+          <div className="portal-slides-wrapper">
+            {BANNER_SLIDES.map((slide, index) => (
+              <div 
+                key={slide.id} 
+                className={`portal-slide ${index === currentSlide ? 'active' : ''}`}
+              >
+                <img 
+                  src={slide.image} 
+                  alt={isBengali ? slide.titleBn : slide.titleEn} 
+                  className="portal-slide-img" 
+                />
+                <div className="portal-slide-overlay" />
+                <div className="portal-slide-content">
+                  <div className="portal-badge-row">
+                    <div className="portal-govt-emblem">
+                      <Shield size={18} color="#ffffff" />
+                    </div>
+                    <span className="portal-badge-text">
+                      {isBengali ? slide.tagBn : slide.tagEn}
+                    </span>
+                  </div>
+                  <h2 className="portal-banner-title">
+                    {isBengali ? slide.titleBn : slide.titleEn}
+                  </h2>
+                  <p className="portal-banner-subtitle">
+                    {isBengali ? slide.subtitleBn : slide.subtitleEn}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <button 
+            type="button" 
+            className="portal-nav-btn portal-nav-prev" 
+            onClick={handlePrevSlide}
+            aria-label="Previous Slide"
+          >
+            <ChevronLeft size={18} />
+          </button>
+          <button 
+            type="button" 
+            className="portal-nav-btn portal-nav-next" 
+            onClick={handleNextSlide}
+            aria-label="Next Slide"
+          >
+            <ChevronRight size={18} />
+          </button>
+
+          <div className="portal-slide-dots">
+            {BANNER_SLIDES.map((_, i) => (
+              <button
+                key={i}
+                type="button"
+                className={`portal-dot ${i === currentSlide ? 'active' : ''}`}
+                onClick={() => setCurrentSlide(i)}
+                aria-label={`Go to slide ${i + 1}`}
+              />
+            ))}
+          </div>
+        </section>
+
+        {/* Live Ticker */}
+        <div className="portal-marquee-bar">
+          <div className="marquee-badge">
+            <AlertTriangle size={13} />
+            <span>{isBengali ? 'জরুরি নোটিশ' : 'LIVE TICKER'}</span>
+          </div>
+          <div className="marquee-content-wrap">
+            <span className="marquee-text">
+              {isBengali 
+                ? '📢 বিশেষ ডেঙ্গু সতর্কতা: সাম্প্রতিক বৃষ্টিপাতের কারণে বাড়ির আশপাশের ছাদ, ফুলের টব ও খোলা পাত্রে জমে থাকা পানি অবিলম্বে পরিষ্কার করুন। সন্দেহজনক প্রজননস্থল দেখলে সাথে সাথে অ্যাপে রিপোর্ট দিন।' 
+                : '📢 High Vector Alert: Incessant rain increases Aedes mosquito larvae breeding risks. Inspect rooftops, tyres, and open containers immediately. Report stagnant water pools directly on the map.'}
+            </span>
+          </div>
+        </div>
+
         <header className="hero-header">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
             <div className="brand-badge">
@@ -342,7 +603,49 @@ export default function App() {
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
-              {/* Authenticated Role Portal Switcher */}
+              <button
+                type="button"
+                onClick={() => setIsWalkthroughOpen(true)}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '5px',
+                  padding: '6px 14px',
+                  borderRadius: '20px',
+                  border: '1px solid #38bdf8',
+                  background: '#0f172a',
+                  color: '#38bdf8',
+                  fontSize: '0.8rem',
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  boxShadow: '0 2px 8px rgba(56, 189, 248, 0.2)'
+                }}
+              >
+                <Sparkles size={14} color="#38bdf8" />
+                {isBengali ? 'প্রজেক্ট ওয়াকথ্রু (ট্যুর)' : 'About / Tour'}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setIsQuizOpen(true)}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '5px',
+                  padding: '6px 14px',
+                  borderRadius: '20px',
+                  border: '1px solid #bbf7d0',
+                  background: '#f0fdf4',
+                  color: '#15803d',
+                  fontSize: '0.8rem',
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  boxShadow: '0 2px 6px rgba(22,163,74,0.15)'
+                }}
+              >
+                <Award size={14} color="#16a34a" /> {isBengali ? 'ডেঙ্গু কুইজ ও জ্ঞানকোষ' : 'Quiz & Knowledge'}
+              </button>
+
               {currentUser?.role === 'volunteer' ? (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <button
@@ -363,13 +666,12 @@ export default function App() {
                       boxShadow: '0 2px 6px rgba(4,120,87,0.3)'
                     }}
                   >
-                    <Shield size={14} /> {isBengali ? 'ভলান্টিয়ার কমান্ড' : 'Squad Portal'}
+                    <Shield size={14} /> {isBengali ? 'ভলান্টিয়ার কমান্ড' : 'Squad Portal'}
                   </button>
 
                   <button
                     type="button"
                     onClick={handleLogout}
-                    title="Sign Out to Guest Mode"
                     style={{
                       display: 'inline-flex',
                       alignItems: 'center',
@@ -412,7 +714,6 @@ export default function App() {
                   <button
                     type="button"
                     onClick={handleLogout}
-                    title="Sign Out to Guest Mode"
                     style={{
                       display: 'inline-flex',
                       alignItems: 'center',
@@ -452,7 +753,6 @@ export default function App() {
                 </button>
               )}
 
-              {/* Central Command Hub Button */}
               <button
                 type="button"
                 onClick={() => setIsHubOpen(true)}
@@ -467,14 +767,12 @@ export default function App() {
                   color: '#ffffff',
                   fontSize: '0.8rem',
                   fontWeight: 800,
-                  cursor: 'pointer',
-                  boxShadow: '0 2px 8px rgba(15,118,110,0.2)'
+                  cursor: 'pointer'
                 }}
               >
                 <LayoutGrid size={14} /> {isBengali ? 'কমান্ড হাব' : 'Command Hub'}
               </button>
 
-              {/* Language Switcher */}
               <button
                 type="button"
                 onClick={() => setIsBengali(!isBengali)}
@@ -496,7 +794,6 @@ export default function App() {
                 {isBengali ? 'EN' : 'বাংলা'}
               </button>
 
-              {/* Quick Simulation Button */}
               <button
                 type="button"
                 onClick={handleSimulateReport}
@@ -525,16 +822,16 @@ export default function App() {
           </h1>
           <p className="hero-subtitle">
             {currentUser 
-              ? (isBengali ? `স্বাগতম, ${currentUser.name}! আপনি এখন ভেক্টর প্রতিরোধ নেটওয়ার্কে সক্রিয় রয়েছেন।` : `Welcome, ${currentUser.name}! You are currently authenticated on the municipal vector surveillance grid.`)
-              : (isBengali ? 'গেস্ট মোড সক্রিয়: আপনি লগইন ছাড়াই সরাসরি রিপোর্ট ও মানচিত্র ব্যবহার করতে পারেন।' : 'Guest Mode Active: Direct frictionless reporting and vector intelligence enabled without mandatory login.')}
+              ? (isBengali ? `স্বাগতম, ${currentUser.name}! আপনি এখন ভেক্টর প্রতিরোধ নেটওয়ার্কে সক্রিয় রয়েছেন।` : `Welcome, ${currentUser.name}! You are currently authenticated on the municipal vector surveillance grid.`)
+              : (isBengali ? 'গেস্ট মোড সক্রিয়: আপনি লগইন ছাড়াই সরাসরি রিপোর্ট ও মানচিত্র ব্যবহার করতে পারেন।' : 'Guest Mode Active: Direct frictionless reporting and vector intelligence enabled without mandatory login.')}
           </p>
         </header>
 
-        {/* 3 Metrics Cards */}
+        {/* Metrics Grid */}
         <div className="metrics-grid">
           <div className="metric-card">
             <div className="metric-value red">{activeCount}</div>
-            <div className="metric-label">{isBengali ? 'সক্রিয় ঝুঁকি' : 'Active'}</div>
+            <div className="metric-label">{isBengali ? 'সক্রিয় ঝুঁকি' : 'Active'}</div>
           </div>
           <div className="metric-card">
             <div className="metric-value green">{clearedCount}</div>
@@ -546,10 +843,14 @@ export default function App() {
           </div>
         </div>
 
-        {/* Climate & Larvae Risk Advisory Bar */}
-        <WeatherAdvisory activeCount={activeCount} />
+        {/* Weather Advisory */}
+        <WeatherAdvisory 
+          activeCount={activeCount} 
+          onOpenHelpline={() => setIsHelplineOpen(true)} 
+          isBengali={isBengali} 
+        />
 
-        {/* Dynamic Views */}
+        {/* Views */}
         {currentView === 'map' && (
           <>
             <HotspotMap 
@@ -559,20 +860,39 @@ export default function App() {
               setSearchTerm={setSearchTerm}
               filterStatus={filterStatus}
               setFilterStatus={setFilterStatus}
+              onLaunchModal={handleLaunchModal}
               isBengali={isBengali}
             />
+            
             <ActivityList 
               reports={filteredReports} 
               onSelectTask={setSelectedTask} 
+            />
+
+            {/* Dedicated Presentation & Registration Form Section placed at the bottom */}
+            <NongraBriefSection 
+              onOpenTour={() => setIsWalkthroughOpen(true)}
+              onOpenReport={() => setIsReportOpen(true)}
+              onOpenQuiz={() => setIsQuizOpen(true)}
+              isBengali={isBengali}
             />
           </>
         )}
 
         {currentView === 'activity' && (
-          <ActivityList 
-            reports={filteredReports} 
-            onSelectTask={setSelectedTask} 
-          />
+          <>
+            <ActivityList 
+              reports={filteredReports} 
+              onSelectTask={setSelectedTask} 
+            />
+
+            <NongraBriefSection 
+              onOpenTour={() => setIsWalkthroughOpen(true)}
+              onOpenReport={() => setIsReportOpen(true)}
+              onOpenQuiz={() => setIsQuizOpen(true)}
+              isBengali={isBengali}
+            />
+          </>
         )}
 
         {currentView === 'profile' && (
@@ -612,7 +932,6 @@ export default function App() {
           <Activity size={20} />
           <span>{isBengali ? 'কার্যক্রম' : 'Activity'}</span>
         </button>
-        
         <button 
           type="button"
           className={`nav-item ${currentView === 'profile' ? 'active' : ''}`}
@@ -622,6 +941,15 @@ export default function App() {
           <span>{isBengali ? 'প্রোফাইল' : 'Profile'}</span>
         </button>
       </nav>
+
+      {/* Project Walkthrough */}
+      <ProjectWalkthroughModal
+        isOpen={isWalkthroughOpen}
+        onClose={() => setIsWalkthroughOpen(false)}
+        isBengali={isBengali}
+        onOpenQuiz={() => setIsQuizOpen(true)}
+        onOpenReport={() => setIsReportOpen(true)}
+      />
 
       {/* Auth Modal */}
       <AuthModal
@@ -653,14 +981,17 @@ export default function App() {
         onClose={() => setSelectedTask(null)} 
         onClaim={handleClaim}
         onResolve={handleResolve}
+        onDelete={handleDeleteReport}
+        onUpdate={handleUpdateReport}
+        currentUser={currentUser}
         isBengali={isBengali}
       />
 
-      {/* Report Modal */}
+      {/* Report Modal with Real-time Optimistic Placement */}
       <ReportModal 
         isOpen={isReportOpen}
         onClose={() => setIsReportOpen(false)}
-        onReportAdded={fetchData}
+        onReportAdded={handleReportAdded}
         isBengali={isBengali}
       />
 
@@ -673,14 +1004,24 @@ export default function App() {
         isBengali={isBengali}
       />
 
-      {/* SDG Impact Analytics Modal */}
+      {/* Dengue Quiz */}
+      <DengueKnowledgeQuizModal
+        isOpen={isQuizOpen}
+        onClose={() => setIsQuizOpen(false)}
+        user={currentUser}
+        onRewardEarned={handleRewardEarned}
+        onOpenAuth={() => setIsAuthOpen(true)}
+        isBengali={isBengali}
+      />
+
+      {/* Impact Modal */}
       <ImpactModal
         isOpen={isImpactOpen}
         onClose={() => setIsImpactOpen(false)}
         reports={reports}
       />
 
-      {/* Spray Triage Queue Modal */}
+      {/* Triage Modal */}
       <TriageModal
         isOpen={isTriageOpen}
         onClose={() => setIsTriageOpen(false)}
@@ -695,7 +1036,7 @@ export default function App() {
         isBengali={isBengali}
       />
 
-      {/* Printable Dispatch Manifest */}
+      {/* Print Dispatch Manifest */}
       <PrintDispatchModal
         isOpen={isPrintOpen}
         onClose={() => setIsPrintOpen(false)}
@@ -703,7 +1044,7 @@ export default function App() {
         isBengali={isBengali}
       />
 
-      {/* Emergency Broadcast Modal */}
+      {/* Emergency Broadcast */}
       <BroadcastModal
         isOpen={isBroadcastOpen}
         onClose={() => setIsBroadcastOpen(false)}
@@ -711,7 +1052,7 @@ export default function App() {
         isBengali={isBengali}
       />
 
-      {/* 7-Day Outbreak Trend Analytics Modal */}
+      {/* Trend Analytics */}
       <TrendAnalyticsModal
         isOpen={isTrendOpen}
         onClose={() => setIsTrendOpen(false)}
@@ -719,7 +1060,7 @@ export default function App() {
         isBengali={isBengali}
       />
 
-      {/* Municipal Ward Scorecard Modal */}
+      {/* Ward Scorecard */}
       <WardScorecardModal
         isOpen={isWardOpen}
         onClose={() => setIsWardOpen(false)}
@@ -727,14 +1068,14 @@ export default function App() {
         isBengali={isBengali}
       />
 
-      {/* Offline Field Sync Modal */}
+      {/* Offline Sync */}
       <OfflineSyncModal
         isOpen={isSyncOpen}
         onClose={() => setIsSyncOpen(false)}
         isBengali={isBengali}
       />
 
-      {/* Larvicide Supply Inventory Modal */}
+      {/* Inventory Modal */}
       <InventoryModal
         isOpen={isInventoryOpen}
         onClose={() => setIsInventoryOpen(false)}
@@ -742,28 +1083,28 @@ export default function App() {
         isBengali={isBengali}
       />
 
-      {/* Clinical Dengue Referral & Helpline Modal */}
+      {/* Helpline Modal */}
       <HelplineModal
         isOpen={isHelplineOpen}
         onClose={() => setIsHelplineOpen(false)}
         isBengali={isBengali}
       />
 
-      {/* Breteau Index & Larval Survey Calculator Modal */}
+      {/* Breteau Calculator */}
       <BreteauCalculatorModal
         isOpen={isBreteauOpen}
         onClose={() => setIsBreteauOpen(false)}
         isBengali={isBengali}
       />
 
-      {/* Public Health Awareness & Prevention Hub Modal */}
+      {/* Public Health Awareness */}
       <AwarenessModal
         isOpen={isAwarenessOpen}
         onClose={() => setIsAwarenessOpen(false)}
         isBengali={isBengali}
       />
 
-      {/* Proximity Threat Radar Modal */}
+      {/* Proximity Radar */}
       <ProximityRadarModal
         isOpen={isRadarOpen}
         onClose={() => setIsRadarOpen(false)}
@@ -771,7 +1112,7 @@ export default function App() {
         isBengali={isBengali}
       />
 
-      {/* Municipal Audit Log & Compliance Ledger Modal */}
+      {/* Audit Log */}
       <AuditLogModal
         isOpen={isAuditOpen}
         onClose={() => setIsAuditOpen(false)}
@@ -779,14 +1120,14 @@ export default function App() {
         isBengali={isBengali}
       />
 
-      {/* Predictive Climate Larval Hatch Simulator Modal */}
+      {/* Climate Simulator */}
       <ClimateSimulatorModal
         isOpen={isClimateOpen}
         onClose={() => setIsClimateOpen(false)}
         isBengali={isBengali}
       />
 
-      {/* Volunteer Field Patrol Route Optimizer Modal */}
+      {/* Route Optimizer */}
       <RouteOptimizerModal
         isOpen={isRouteOpen}
         onClose={() => setIsRouteOpen(false)}
@@ -794,7 +1135,7 @@ export default function App() {
         isBengali={isBengali}
       />
 
-      {/* Public Community Citizen Rating & Feedback Modal */}
+      {/* Citizen Rating */}
       <CitizenRatingModal
         isOpen={isRatingOpen}
         onClose={() => setIsRatingOpen(false)}
@@ -802,7 +1143,7 @@ export default function App() {
         isBengali={isBengali}
       />
 
-      {/* Executive Project Brief & Jury Card Modal */}
+      {/* Executive Brief */}
       <ExecutiveBriefModal
         isOpen={isBriefOpen}
         onClose={() => setIsBriefOpen(false)}
@@ -810,7 +1151,7 @@ export default function App() {
         isBengali={isBengali}
       />
 
-      {/* Municipal Sanitary Clearance Certificate Modal */}
+      {/* Clearance Certificate */}
       <ClearanceCertificateModal
         isOpen={isClearanceOpen}
         onClose={() => setIsClearanceOpen(false)}
@@ -818,7 +1159,7 @@ export default function App() {
         isBengali={isBengali}
       />
 
-      {/* Automated Jury Pitch Demo Runner */}
+      {/* Showcase Runner */}
       <ShowcaseRunnerModal
         isOpen={isShowcaseOpen}
         onClose={() => setIsShowcaseOpen(false)}

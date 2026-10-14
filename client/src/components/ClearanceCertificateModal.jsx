@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, ShieldCheck, Printer, CheckCircle, Building, Calendar, FileText, Stamp } from 'lucide-react';
+import { X, ShieldCheck, Printer, CheckCircle, Building, Calendar, FileText, Stamp, QrCode } from 'lucide-react';
 
 export default function ClearanceCertificateModal({ isOpen, onClose, reports = [], isBengali = false }) {
   if (!isOpen) return null;
@@ -43,10 +43,10 @@ export default function ClearanceCertificateModal({ isOpen, onClose, reports = [
               </div>
               <div>
                 <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800 }}>
-                  {isBengali ? 'পৌরসভা স্বাস্থ্য ছাড়পত্র সনদ' : 'Municipal Sanitary Clearance Certificate'}
+                  {isBengali ? 'পৌরসভা স্বাস্থ্য ছাড়পত্র সনদ' : 'Municipal Sanitary Clearance Certificate'}
                 </h2>
                 <span style={{ fontSize: '0.72rem', color: '#059669', fontWeight: 700, textTransform: 'uppercase' }}>
-                  {isBengali ? 'ডিজিএইচএস ভেক্টর কন্ট্রোল প্রত্যয়নপত্র' : 'DGHS Vector Compliance Certificate'}
+                  {isBengali ? 'ডিজিএইচএস ভেক্টর কন্ট্রোল প্রত্যয়নপত্র' : 'DGHS Vector Compliance Certificate'}
                 </span>
               </div>
             </div>
@@ -117,7 +117,7 @@ export default function ClearanceCertificateModal({ isOpen, onClose, reports = [
               <>
                 <p style={{ fontSize: '0.82rem', color: '#334155', lineHeight: 1.6, margin: '0 0 16px' }}>
                   {isBengali
-                    ? `এতদ্বারা প্রত্যয়ন করা যাচ্ছে যে, নংরা (Nongra) প্ল্যাটফর্মের মাধ্যমে নথিভুক্ত সাইট #${selectedReport.id} (${selectedReport.description})-এ পরিদর্শিত এডিস মশার প্রজননস্থল এবং জলাবদ্ধতা সফলভাবে নিষ্কাশন করা হয়েছে। উক্ত স্থানটি ডিজিএইচএস নির্দেশিকা অনুসারে লার্ভামুক্ত ঘোষণা করা হলো।`
+                    ? `এতদ্বারা প্রত্যয়ন করা যাচ্ছে যে, নংরা (Nongra) প্ল্যাটফর্মের মাধ্যমে নথিভুক্ত সাইট #${selectedReport.id} (${selectedReport.description})-এ পরিদর্শিত এডিস মশার প্রজননস্থল এবং জলাবদ্ধতা সফলভাবে নিষ্কাশন করা হয়েছে। উক্ত স্থানটি ডিজিএইচএস নির্দেশিকা অনুসারে লার্ভামুক্ত ঘোষণা করা হলো।`
                     : `This is to certify that the stagnant water breeding hazard identified under Registry Incident #${selectedReport.id} ("${selectedReport.description}") has undergone physical drainage and certified Bti bio-larvicide neutralization in full adherence with National Dengue Prevention Directives.`}
                 </p>
 
@@ -156,7 +156,7 @@ export default function ClearanceCertificateModal({ isOpen, onClose, reports = [
               </>
             ) : (
               <p style={{ textAlign: 'center', color: '#64748b', fontSize: '0.85rem' }}>
-                {isBengali ? 'কোনো সমাধানকৃত সাইট পাওয়া যায়নি।' : 'No resolved sites currently on file.'}
+                {isBengali ? 'কোনো সমাধানকৃত সাইট পাওয়া যায়নি।' : 'No resolved sites currently on file.'}
               </p>
             )}
           </div>
